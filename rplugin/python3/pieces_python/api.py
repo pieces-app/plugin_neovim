@@ -58,7 +58,7 @@ def version_check():
 
 	# Check compatibility
 	if os_version_parsed >= max_version_parsed:
-		return False,"the Pieces Sublime Package"
+		return False,"the Pieces Neovim Plugin"
 	elif os_version_parsed < min_version_parsed:
 		return False,"Pieces OS"
 	return True,None

@@ -1,6 +1,6 @@
 from ._pieces_lib import pieces_os_client as pos_client
 from typing import Dict
-
+import pynvim
 from ._version import __version__
 
 
@@ -10,13 +10,18 @@ class classproperty(property):
 
 class Settings:
 	# Initialize class variables
-	nvim = None
+	nvim:pynvim.Nvim = None
 	application = None
 	models = None
 	host = ""
 	model_name = ""
 	_api_client = None
 	_os = None
+	model_name = "GPT-4o Chat Model" # TODO: be changed later dependends on the user favorite
+
+	@classproperty
+	def model_id(cls):
+		return cls.get_models_ids()[cls.model_name]
 
 	@classproperty
 	def os(cls):
@@ -69,7 +74,6 @@ class Settings:
 
 		api_response = api_instance.models_snapshot()
 		cls.models = {model.name: model.id for model in api_response.iterable if model.cloud or model.downloaded} # getting the models that are available in the cloud or is downloaded
-
 
 		return cls.models
 

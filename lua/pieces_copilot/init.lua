@@ -22,8 +22,7 @@ local function create_chat_popup()
 			winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
 		},
 		buf_options = {
-			filetype = "markdown",
-			modifiable = false
+			filetype = "markdown"
 		}
 	})
 	-- Create an autogroup
@@ -53,7 +52,7 @@ local function create_input_popup(on_submit)
 		border = {
 			style = "rounded",
 			text = {
-				top = "Input",
+				top = " Input ",
 				top_align = "center",
 			},
 		},
@@ -80,8 +79,8 @@ local function create_input_popup(on_submit)
 	return input
 end
 
-local function append_to_chat(popup, text)
-	local bufnr = popup.bufnr
+local function append_to_chat(text)
+	local bufnr = chat_popup.bufnr
 	current_line = current_line + 2
 	vim.api.nvim_buf_set_lines(bufnr, current_line, -1, false, { text })
 end
@@ -90,11 +89,16 @@ end
 local function setup()
 	chat_popup = create_chat_popup()
 
-
 	local function on_submit(value)
+		if value:match("^%s*$") then
+			return
+		end
+		vim.fn.PiecesCopilotSendQuestion(value)
 		vim.api.nvim_buf_set_lines(input_popup.bufnr, 0, -1, false, { "" })
-		append_to_chat(chat_popup, value)
+		append_to_chat(value)
 	end
+
+
 	-- Initial creation of the input popup
 	input_popup = create_input_popup(on_submit)
 
@@ -104,9 +108,6 @@ local function setup()
 			relative = "editor",
 			position = "right",
 			size = "30%",
-			buf_options = {
-				modified = false
-			}
 		}),
 
 		NuiLayout.Box({
@@ -117,6 +118,7 @@ local function setup()
 		})
 	)
 	layout:mount()
+	vim.o.statusline = "Pieces Copilot" -- TODO display the model name also
 
 	vim.api.nvim_set_current_win(input_popup.winid)
 	vim.fn.mode("i")
@@ -126,4 +128,5 @@ vim.api.nvim_create_user_command("PiecesCopilot", setup, {})
 
 return {
 	setup = setup,
+	append_to_chat = append_to_chat
 }
