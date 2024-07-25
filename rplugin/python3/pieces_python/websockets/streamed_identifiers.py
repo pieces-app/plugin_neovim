@@ -26,7 +26,7 @@ import threading
 from typing import Dict, Union, Callable
 from .._pieces_lib.pieces_os_client import Conversation, StreamedIdentifiers, Asset
 from abc import ABC,abstractmethod
-
+from ..settings import Settings
 
 class StreamedIdentifiersCache(ABC):
     """
@@ -93,6 +93,9 @@ class StreamedIdentifiersCache(ABC):
                 if item.deleted:
                     # Asset deleted
                     cls.identifiers_snapshot.pop(reference_id, None)
+                    # Remove it also from lua
+                    lua = f"""require("pieces_assets.assets").remove_snippet('{reference_id}')"""
+                    Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
                 else:
                     if reference_id not in cls.identifiers_snapshot and not cls.first_shot:
                         cls.identifiers_snapshot = {reference_id: None, **cls.identifiers_snapshot}
