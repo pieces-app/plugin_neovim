@@ -1,6 +1,6 @@
 import pynvim
 from .settings import Settings
-from .api import get_version
+from .api import get_version,version_check
 from .websockets import ask_stream_ws,base_websocket,assets_ws
 from ._pieces_lib.pieces_os_client import QGPTStreamInput,QGPTQuestionInput,RelevantQGPTSeeds
 
@@ -18,8 +18,11 @@ class Pieces:
 	@pynvim.function("PiecesStartup")
 	def startup(self,args):
 		""" START THE WEBSOCKETS!"""
-		self.nvim.command(f"echom 'started websockets'")
-		base_websocket.BaseWebsocket.start_all()
+		check,plugin = version_check()
+		if check:
+			base_websocket.BaseWebsocket.start_all()
+		else:
+			self.nvim.out_write(f"Please update {plugin}")
 
 	@pynvim.command('PiecesHealth')
 	def get_health(self):
@@ -44,3 +47,7 @@ class Pieces:
 			),
 			conversation = ask_stream_ws.conversation_id,
 		))
+
+	@pynvim.function("PiecesVersionCheck", sync=True)
+	def version_check(self,args):
+		return version_check()[0]
