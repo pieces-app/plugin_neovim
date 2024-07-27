@@ -1,39 +1,34 @@
 import pynvim
 from .settings import Settings
-from .api import get_version,version_check
-from .websockets import ask_stream_ws,base_websocket,assets_ws
+from .api import get_version,version_check,is_pieces_opened
+from .websockets import ask_stream_ws,base_websocket
 from ._pieces_lib.pieces_os_client import QGPTStreamInput,QGPTQuestionInput,RelevantQGPTSeeds
-
-from .assets_snapshot import AssetSnapshot
 
 
 @pynvim.plugin
 class Pieces:
 	api_client = None
-	def __init__(self,nvim) -> None:
+	def __init__(self,nvim:pynvim.Nvim) -> None:
 		self.nvim = nvim
 		Settings.nvim = nvim
-		Settings.get_application() # Connect to the connector API
+		Settings.load_config()
 
 	@pynvim.function("PiecesStartup")
 	def startup(self,args):
-		""" START THE WEBSOCKETS!"""
+		"""START THE WEBSOCKETS!"""
+		if not Settings.get_health():
+			self.nvim.err_write("Please make sure Pieces OS is running\n")
+			return
+
 		check,plugin = version_check()
 		if check:
+			Settings.is_loaded = True # Everything is loaded fine!
+			Settings.get_application() # Connect to the connector API
 			base_websocket.BaseWebsocket.start_all()
 		else:
-			self.nvim.out_write(f"Please update {plugin}")
-
-	@pynvim.command('PiecesHealth')
-	def get_health(self):
-		health = "ok" if Settings.get_health() else "failed"
-		self.nvim.command(f"echom '{health}'")
-
-
-	@pynvim.command('PiecesOSVersion')
-	def get_version(self):
-		self.nvim.command(f"echom '{get_version()}'")
-
+			Settings.is_loaded = False
+			self.nvim.err_write(f"Please update {plugin}\n")
+	
 	@pynvim.function('PiecesCopilotSendQuestion',sync=True)
 	def send_question(self,args):
 		query = args[0]
@@ -51,3 +46,27 @@ class Pieces:
 	@pynvim.function("PiecesVersionCheck", sync=True)
 	def version_check(self,args):
 		return version_check()[0]
+
+	## PYTHON COMMANDS
+	@pynvim.command('PiecesHealth')
+	@is_pieces_opened
+	def get_health(self):
+		health = "ok" if Settings.get_health() else "failed"
+		self.nvim.out_write(f"{health}\n")
+
+	@pynvim.command('PiecesOSVersion')
+	@is_pieces_opened
+	def get_version(self):
+		self.nvim.out_write(f"{get_version()}\n")
+
+	## LUA COMMANDS
+	@pynvim.command("PiecesSnippets")
+	@is_pieces_opened
+	def open_snippets(self):
+		self.nvim.exec_lua("require('pieces_assets').setup()")
+
+
+	@pynvim.command("PiecesCopilot")
+	@is_pieces_opened
+	def open_copilot(self):
+		self.nvim.exec_lua("require('pieces_copilot').setup()")
