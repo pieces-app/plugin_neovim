@@ -18,7 +18,7 @@ class Pieces:
 	@pynvim.function("PiecesStartup")
 	def startup(self,args):
 		""" START THE WEBSOCKETS!"""
-		self.nvim.command(f"echom 'started websockets'")
+		# self.nvim.command(f"echom 'started websockets'")
 		base_websocket.BaseWebsocket.start_all()
 
 	@pynvim.command('PiecesHealth')
@@ -44,3 +44,12 @@ class Pieces:
 			),
 			conversation = ask_stream_ws.conversation_id,
 		))
+	@pynvim.function('PiecesEditAsset')
+	def edit_asset(self,args):
+		asset_id,data = args
+		AssetSnapshot(asset_id).edit_asset_original_format(data)
+
+	@pynvim.function('PiecesDeleteAsset')
+	def delete_asset(self,args):
+		asset_id = args[0]
+		AssetSnapshot(asset_id).delete()

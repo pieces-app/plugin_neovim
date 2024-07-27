@@ -3,6 +3,7 @@ from typing import Optional
 
 from .websockets.streamed_identifiers import StreamedIdentifiersCache
 from ._pieces_lib.pieces_os_client import (Asset, 
+											AssetsApi,
 											AssetApi,
 											ClassificationSpecificEnum,
 											FormatApi,
@@ -70,6 +71,9 @@ class AssetSnapshot(StreamedIdentifiersCache,
 		for annotation in annotations:
 			if annotation.type == "DESCRIPTION":
 				return annotation
+	def delete(self):
+		delete_instance = AssetsApi(Settings.api_client)
+		delete_instance.assets_delete_asset(self._asset_id)
 
 def push_to_lua(asset):
 	asset_wrapper = AssetSnapshot(asset.id)
@@ -79,7 +83,7 @@ def push_to_lua(asset):
 	if lang: lang = lang.value
 	annotation = asset_wrapper.get_annotation()
 	if annotation: annotation = annotation.text
-
+	
 	lua = f"""
 	require("pieces_assets.assets").append_snippets({{
 				name = [=[{asset_wrapper.name}]=],
@@ -88,6 +92,6 @@ def push_to_lua(asset):
 				language = "{lang}",
 				filetype = "{file_map.get(lang,"txt")}",
 				annotation = [=[{annotation}]=]
-			}})
+			}},{str(not AssetSnapshot.first_shot).lower()})
 	"""
 	Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
