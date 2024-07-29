@@ -100,6 +100,7 @@ class Settings:
 		cls.AUTH_WS_URL = ws_base_url + "/user/stream"
 		cls.ASK_STREAM_WS_URL = ws_base_url + "/qgpt/stream"
 		cls.CONVERSATION_WS_URL = ws_base_url + "/conversations/stream/identifiers"
+		cls.HEALTH_WS_URL = ws_base_url + "/.well-known/stream/health"
 
 		configuration = pos_client.Configuration(host=cls.host)
 
