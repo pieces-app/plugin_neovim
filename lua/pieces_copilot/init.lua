@@ -124,8 +124,6 @@ local function setup()
 	vim.fn.mode("i")
 end
 
-vim.api.nvim_create_user_command("PiecesCopilot", setup, {})
-
 return {
 	setup = setup,
 	append_to_chat = append_to_chat

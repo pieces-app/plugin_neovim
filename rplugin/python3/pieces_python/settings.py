@@ -16,18 +16,12 @@ class Settings:
 	host = ""
 	model_name = ""
 	_api_client = None
-	_os = None
 	model_name = "GPT-4o Chat Model" # TODO: be changed later dependends on the user favorite
+	is_loaded = False
 
 	@classproperty
 	def model_id(cls):
 		return cls.get_models_ids()[cls.model_name]
-
-	@classproperty
-	def os(cls):
-		if cls._os: return cls._os
-		cls._os = cls.get_config_lua('os')
-		return cls._os
 
 	@classproperty
 	def api_client(cls):
@@ -78,17 +72,22 @@ class Settings:
 		return cls.models
 
 	@classmethod
-	def get_config_lua(cls,config):
-		lua_code = f"""
-		local config = require('pieces_config')
-		return config.{config}
+	def load_config(cls) -> None:
 		"""
-		return cls.nvim.exec_lua(lua_code)
+			Load the lua configrations
+		"""
+		for config in ["os",'host']:
+			lua_code = f"""
+			local config = require('pieces_config')
+			return config.{config}
+			"""
+			out = cls.nvim.exec_lua(lua_code)
+
+			setattr(cls,config,out)
+
 
 	@classmethod
 	def _get_api_client(cls):
-		cls.host = cls.get_config_lua('host')
-
 		if not cls.host:
 			if 'linux' == cls.os:
 				cls.host = "http://127.0.0.1:5323"

@@ -6,7 +6,7 @@ import time
 import subprocess
 from ._version import __version__
 
-PIECES_OS_MIN_VERSION = "10.0.0"  # Minium version (10.0.0)
+PIECES_OS_MIN_VERSION = "10.0.3"  # Minium version (10.0.0)
 PIECES_OS_MAX_VERSION = "11.0.0" # Maxium version (11.0.0)
 
 def get_version() -> Optional[str]:
@@ -16,8 +16,6 @@ def get_version() -> Optional[str]:
 		return version
 	except: # There is a problem in the startup
 		return None
-
-
 
 
 def open_pieces_os() -> Optional[str]:
@@ -62,4 +60,13 @@ def version_check():
 	elif os_version_parsed < min_version_parsed:
 		return False,"Pieces OS"
 	return True,None
+
+
+def is_pieces_opened(func):
+	def wrapper(*args, **kwargs):
+		if Settings.is_loaded:
+			return func(*args, **kwargs)
+		else:
+			return Settings.nvim.err_write("Please make sure Pieces OS is running and updated\n")
+	return wrapper
 
