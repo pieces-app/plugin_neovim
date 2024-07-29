@@ -19,15 +19,10 @@ class Pieces:
 		if not Settings.get_health():
 			self.nvim.err_write("Please make sure Pieces OS is running\n")
 			return
+		""" START THE WEBSOCKETS!"""
+		# self.nvim.command(f"echom 'started websockets'")
+		base_websocket.BaseWebsocket.start_all()
 
-		check,plugin = version_check()
-		if check:
-			Settings.is_loaded = True # Everything is loaded fine!
-			Settings.get_application() # Connect to the connector API
-			base_websocket.BaseWebsocket.start_all()
-		else:
-			Settings.is_loaded = False
-			self.nvim.err_write(f"Please update {plugin}\n")
 	
 	@pynvim.function('PiecesCopilotSendQuestion',sync=True)
 	def send_question(self,args):
@@ -42,6 +37,16 @@ class Pieces:
 			),
 			conversation = ask_stream_ws.conversation_id,
 		))
+	@pynvim.function('PiecesEditAsset')
+	def edit_asset(self,args):
+		asset_id,data = args
+		AssetSnapshot(asset_id).edit_asset_original_format(data)
+
+	@pynvim.function('PiecesDeleteAsset')
+	def delete_asset(self,args):
+		asset_id = args[0]
+		AssetSnapshot(asset_id).delete()
+
 
 	@pynvim.function("PiecesVersionCheck", sync=True)
 	def version_check(self,args):
@@ -70,3 +75,6 @@ class Pieces:
 	@is_pieces_opened
 	def open_copilot(self):
 		self.nvim.exec_lua("require('pieces_copilot').setup()")
+
+
+

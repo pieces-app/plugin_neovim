@@ -3,11 +3,12 @@ local Layout = require('nui.layout')
 local event = require('nui.utils.autocmd').event
 local snippets = require('pieces_assets.assets')
 local icons = require('nvim-web-devicons')
-
+local edit_asset = require('pieces_assets.edit').edit_asset
+local delete_asset = require('pieces_assets.edit').delete_asset
 
 local M = {}
 local current_index = 1
-local displayed_snippets = snippets.snippets
+local snippets_search_results = snippets.snippets
 
 function M.setup()
 	-- Create the search input popup
@@ -87,7 +88,7 @@ function M.setup()
 	-- Function to update the list popup
 	local function update_list()
 		local lines = {}
-		for i, snippet in ipairs(displayed_snippets) do
+		for i, snippet in ipairs(snippets_search_results) do
 			local icon = icons.get_icon("dummy", snippet.language)
 			local base_name = icon .. "  " .. snippet.name
 			if i == current_index then
@@ -106,24 +107,17 @@ function M.setup()
 
 		vim.api.nvim_buf_set_lines(results_popup.bufnr, 0, -1, false, lines)
 
-        local win_height = vim.api.nvim_win_get_height(results_popup.winid)
+        local win_height = vim.api.nvim_win_get_height(results_popup.winid) - 5 -- Removing the borders
         local cursor_line = current_index - 1 -- Convert to 0-based index for nvim_win_set_cursor
-
-        -- Calculate if cursor_line is near the bottom of the window
-        if cursor_line >= win_height then
+        print(win_height,cursor_line)
+        if cursor_line >= win_height or cursor_line-win_height < 0  then
             vim.api.nvim_win_set_cursor(results_popup.winid, { current_index, 0 })
         end
-
-        -- Calculate if the cursor_line is near the top of the window
-        if cursor_line < 0 then
-            vim.api.nvim_win_set_cursor(results_popup.winid, { current_index - win_height + 1, 0 })
-        end
-
 	end
 
 	-- Function to update the preview popup
 	local function update_preview()
-		local snippet = displayed_snippets[current_index]
+		local snippet = snippets_search_results[current_index]
 		-- Split snippet.raw into lines
 		local lines = {}
 		for line in snippet.raw:gmatch("[^\r\n]+") do
@@ -137,7 +131,7 @@ function M.setup()
 	end
 
 	local function down_keymap()
-		if current_index < #displayed_snippets then
+		if current_index < #snippets_search_results then
 			current_index = current_index + 1
 			update_list()
 			update_preview()
@@ -151,21 +145,30 @@ function M.setup()
 			update_preview()
 		end
 	end
+	local function enter_keymap()
+		layout:unmount()
+		edit_asset(snippets_search_results[current_index])
+	end
+	-- Key mappings for navigation
+	local keymaps = {
+		["<Up>"] = up_keymap,
+		["<Down>"] = down_keymap,
+		["<esc>"] = function() layout:unmount() end,
+		["<enter>"] = enter_keymap,
+		["<Del>"] = function() delete_asset(snippets_search_results[current_index]) end
+	}
+	local modes = { "i", "n" }
 
-    -- Key mappings for navigation
-    local keymaps = { ["<Up>"] = up_keymap, ["<Down>"] = down_keymap, ["<esc>"] = function() layout:unmount() end }
-    local modes = {"i", "n"}
-
-    for key, func in pairs(keymaps) do
-        for _, mode in ipairs(modes) do
-            results_popup:map(mode, key, func, { noremap = true })
-            input_popup:map(mode, key, func, { noremap = true })
-        end
-    end
+	for key, func in pairs(keymaps) do
+		for _, mode in ipairs(modes) do
+			results_popup:map(mode, key, func, { noremap = true })
+			input_popup:map(mode, key, func, { noremap = true })
+		end
+	end
 
 
 
-    -- Mount the layout
+	-- Mount the layout
 	layout:mount()
 	update_list()
 	update_preview()
@@ -174,20 +177,19 @@ function M.setup()
 
 	-- Handle search and preview logic
 	local function on_input(input)
-		local results = snippets.search(input)
+		snippets_search_results = snippets.search(input)
 		-- Update the results popup with search results
 		-- You can use a Nui Text component to display the results
 		local lines = {}
-		displayed_snippets = {}
-		for _, result in ipairs(results) do
-			table.insert(displayed_snippets, result)
-			table.insert(lines, result.name)
+		for _, result in ipairs(snippets_search_results) do
+			local icon = icons.get_icon("dummy", result.language)
+			table.insert(lines, icon .. " " .. result.name)
 		end
 		vim.api.nvim_buf_set_lines(results_popup.bufnr, 0, -1, false, lines)
 
-        current_index = 1
+		current_index = 1
 		-- Highlight common characters
-		for i, result in ipairs(results) do
+		for i, result in ipairs(snippets_search_results) do
 			local start_idx, end_idx = result.name:lower():find(input:lower())
 			if start_idx and end_idx then
 				vim.api.nvim_buf_add_highlight(results_popup.bufnr, -1, 'Search', i - 1, start_idx - 1,
