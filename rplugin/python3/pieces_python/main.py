@@ -3,7 +3,7 @@ from .settings import Settings
 from .api import get_version,version_check,is_pieces_opened
 from .websockets import ask_stream_ws,base_websocket
 from ._pieces_lib.pieces_os_client import QGPTStreamInput,QGPTQuestionInput,RelevantQGPTSeeds
-
+from .assets_snapshot import AssetSnapshot
 
 @pynvim.plugin
 class Pieces:
@@ -19,9 +19,15 @@ class Pieces:
 		if not Settings.get_health():
 			self.nvim.err_write("Please make sure Pieces OS is running\n")
 			return
-		""" START THE WEBSOCKETS!"""
-		# self.nvim.command(f"echom 'started websockets'")
-		base_websocket.BaseWebsocket.start_all()
+
+		check,plugin = version_check()
+		if check:
+			Settings.is_loaded = True # Everything is loaded fine!
+			Settings.get_application() # Connect to the connector API
+			base_websocket.BaseWebsocket.start_all()
+		else:
+			Settings.is_loaded = False
+			self.nvim.err_write(f"Please update {plugin}\n")	
 
 	
 	@pynvim.function('PiecesCopilotSendQuestion',sync=True)
@@ -37,6 +43,7 @@ class Pieces:
 			),
 			conversation = ask_stream_ws.conversation_id,
 		))
+
 	@pynvim.function('PiecesEditAsset')
 	def edit_asset(self,args):
 		asset_id,data = args
