@@ -64,19 +64,19 @@ local function create_input_popup(on_submit)
 	local input = NuiInput(popup_options, {
 		prompt = prompt,
 		on_close = function()
-		  vim.api.nvim_command('close')
-		ends
+			vim.api.nvim_command('close')
+		end,
 
 	})
 
 	vim.keymap.set({ "i" }, "<Enter>", function()
-	vim.api.nvim_buf_set_lines(input.bufnr, -1, -1, false, { "" })
-	vim.api.nvim_win_set_cursor(0, { vim.api.nvim_buf_line_count(input.bufnr), 0 })
+		vim.api.nvim_buf_set_lines(input.bufnr, -1, -1, false, { "" })
+		vim.api.nvim_win_set_cursor(0, { vim.api.nvim_buf_line_count(input.bufnr), 0 })
 	end, { buffer = input.bufnr })
 
 	vim.keymap.set({ "n" }, "<Enter>", function()
 		local num_lines = vim.api.nvim_buf_line_count(input.bufnr)
-        local lines = vim.api.nvim_buf_get_lines(input.bufnr, 0, num_lines, false)
+		local lines = vim.api.nvim_buf_get_lines(input.bufnr, 0, num_lines, false)
 		on_submit(lines)
 	end, { buffer = input.bufnr })
 	return input
