@@ -5,15 +5,20 @@ local copilot_ui         = require("pieces_copilot.ui")
 local create_input_popup = copilot_ui.create_input_popup
 local create_chat_popup  = copilot_ui.create_chat_popup
 
-local input_popup, layout, chat_popup, previous_role, whole_text,completed
-local current_line       = -1
+local input_popup, layout, chat_popup, previous_role, whole_text,completed,current_line
 
 local function append_to_chat(character, role)
 	local bufnr = chat_popup.bufnr
 
 	-- Initialize `whole_text` if the role changes
 	if role ~= previous_role then
-		current_line = vim.api.nvim_buf_line_count(bufnr) + 2
+		current_line = vim.api.nvim_buf_line_count(bufnr)
+		if current_line == 1 then
+		    current_line = current_line + 1
+		else
+		    current_line = current_line + 2
+		end
+
 		vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "","" })
 		previous_role = role
 		whole_text = {role .. ": "}
@@ -59,13 +64,13 @@ local function setup()
 			end
 		end
 
-		if not has_non_space_string and completed then
+		if not has_non_space_string and completed == true then
 			return
 		end
 		vim.fn.PiecesCopilotSendQuestion(content)
 		completed = false
 		vim.api.nvim_buf_set_lines(input_popup.bufnr, 0, -1, false, { "" })
-		append_to_chat(value,"User")
+		append_to_chat(lines,"User")
 	end
 
 

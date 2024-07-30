@@ -35,7 +35,6 @@ class Pieces:
 	@pynvim.function('PiecesCopilotSendQuestion',sync=True)
 	def send_question(self,args):
 		query = args[0]
-		self.nvim.command(f"echom '{query}'")
 		ask_stream_ws.send_message(QGPTStreamInput(
 			question=QGPTQuestionInput(
 				relevant=RelevantQGPTSeeds(iterable=[]),
