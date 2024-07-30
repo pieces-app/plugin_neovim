@@ -49,6 +49,10 @@ end
 
 
 local function setup()
+	if chat_popup then
+		return
+	end
+
 	chat_popup = create_chat_popup()
 
 	local function on_submit(value)

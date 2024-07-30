@@ -62,7 +62,10 @@ local function create_input_popup(on_submit)
 	}
 
 	local input = NuiInput(popup_options, {
-		prompt = prompt
+		prompt = prompt,
+		on_close = function()
+		  vim.api.nvim_command('close')
+		ends
 
 	})
 
