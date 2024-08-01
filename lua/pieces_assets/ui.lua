@@ -148,13 +148,17 @@ function M.setup()
 		layout:unmount()
 		edit_asset(snippets_search_results[current_index])
 	end
+	local function delete_asset_keymap()
+		delete_asset(snippets_search_results[current_index])
+		update_list()
+	end
 	-- Key mappings for navigation
 	local keymaps = {
 		["<Up>"] = up_keymap,
 		["<Down>"] = down_keymap,
 		["<esc>"] = function() layout:unmount() end,
 		["<enter>"] = enter_keymap,
-		["<Del>"] = function() delete_asset(snippets_search_results[current_index]) end
+		["<Del>"] = delete_asset_keymap
 	}
 	local modes = { "i", "n" }
 
