@@ -1,0 +1,88 @@
+local NuiPopup = require('nui.popup')
+local NuiInput = require('nui.input')
+
+
+local function create_chat_popup()
+	local popup = NuiPopup({
+		border = {
+			highlight = "FloatBorder",
+			style = "rounded",
+			text = {
+				top = " Pieces Copilot ",
+			},
+		},
+		win_options = {
+			wrap = true,
+			linebreak = true,
+			foldcolumn = "1",
+			winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+		},
+		buf_options = {
+			filetype = "markdown"
+		}
+	})
+	-- Create an autogroup
+	local group = vim.api.nvim_create_augroup("PreventInsertMode", { clear = true })
+
+	-- Add autocommands to the group for the new buffer
+	vim.api.nvim_create_autocmd({ "InsertEnter", "InsertCharPre" }, {
+		group = group,
+		buffer = popup.bufnr,
+		callback = function()
+			vim.cmd("stopinsert")
+		end,
+	})
+	return popup
+end
+
+-- Function to create an input popup
+local function create_input_popup(on_submit)
+	local prompt = "> "
+	local popup_options = {
+		relative = "window",
+		position = {
+			row = 1,
+			col = 0,
+		},
+		size = 20,
+		border = {
+			style = "rounded",
+			text = {
+				top = " Input ",
+				top_align = "center",
+			},
+		},
+		win_options = {
+			winblend = 10,
+			winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+		},
+		buf_options = {
+			filetype = "markdown"
+		},
+	}
+
+	local input = NuiInput(popup_options, {
+		prompt = prompt,
+		on_close = function()
+			vim.api.nvim_command('close')
+		end,
+
+	})
+
+	vim.keymap.set({ "i" }, "<Enter>", function()
+		vim.api.nvim_buf_set_lines(input.bufnr, -1, -1, false, { "" })
+		vim.api.nvim_win_set_cursor(0, { vim.api.nvim_buf_line_count(input.bufnr), 0 })
+	end, { buffer = input.bufnr })
+
+	vim.keymap.set({ "n" }, "<Enter>", function()
+		local num_lines = vim.api.nvim_buf_line_count(input.bufnr)
+		local lines = vim.api.nvim_buf_get_lines(input.bufnr, 0, num_lines, false)
+		on_submit(lines)
+	end, { buffer = input.bufnr })
+	return input
+end
+
+return {
+	create_input_popup = create_input_popup,
+	create_chat_popup = create_chat_popup,
+}

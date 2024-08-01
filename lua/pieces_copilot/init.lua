@@ -1,6 +1,6 @@
 local NuiLayout          = require('nui.layout')
 local NuiSplit           = require('nui.split')
-local copilot_ui         = require("pieces_copilot.ui")
+local copilot_ui         = require("pieces_copilot.copilot_ui")
 
 local create_input_popup = copilot_ui.create_input_popup
 local create_chat_popup  = copilot_ui.create_chat_popup
@@ -49,10 +49,9 @@ end
 
 
 local function setup()
-	if chat_popup then
-		return
+	if layout ~= nil then
+		layout:unmount()
 	end
-
 	chat_popup = create_chat_popup()
 
 	local function on_submit(value)
