@@ -109,7 +109,6 @@ function M.setup()
 
         local win_height = vim.api.nvim_win_get_height(results_popup.winid) - 5 -- Removing the borders
         local cursor_line = current_index - 1 -- Convert to 0-based index for nvim_win_set_cursor
-        print(win_height,cursor_line)
         if cursor_line >= win_height or cursor_line-win_height < 0  then
             vim.api.nvim_win_set_cursor(results_popup.winid, { current_index, 0 })
         end
@@ -149,13 +148,17 @@ function M.setup()
 		layout:unmount()
 		edit_asset(snippets_search_results[current_index])
 	end
+	local function delete_asset_keymap()
+		delete_asset(snippets_search_results[current_index])
+		update_list()
+	end
 	-- Key mappings for navigation
 	local keymaps = {
 		["<Up>"] = up_keymap,
 		["<Down>"] = down_keymap,
 		["<esc>"] = function() layout:unmount() end,
 		["<enter>"] = enter_keymap,
-		["<Del>"] = function() delete_asset(snippets_search_results[current_index]) end
+		["<Del>"] = delete_asset_keymap
 	}
 	local modes = { "i", "n" }
 

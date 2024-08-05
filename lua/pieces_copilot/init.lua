@@ -1,101 +1,79 @@
-local NuiPopup     = require('nui.popup')
-local NuiLayout    = require('nui.layout')
-local NuiSplit     = require('nui.split')
-local NuiLine      = require('nui.line')
-local NuiInput     = require('nui.input')
+local NuiLayout          = require('nui.layout')
+local NuiSplit           = require('nui.split')
+local copilot_ui         = require("pieces_copilot.copilot_ui")
 
-local input_popup, layout, chat_popup
-local current_line = -1
-local function create_chat_popup()
-	local popup = NuiPopup({
-		border = {
-			highlight = "FloatBorder",
-			style = "rounded",
-			text = {
-				top = " Pieces Copilot ",
-			},
-		},
-		win_options = {
-			wrap = true,
-			linebreak = true,
-			foldcolumn = "1",
-			winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
-		},
-		buf_options = {
-			filetype = "markdown"
-		}
-	})
-	-- Create an autogroup
-	local group = vim.api.nvim_create_augroup("PreventInsertMode", { clear = true })
+local create_input_popup = copilot_ui.create_input_popup
+local create_chat_popup  = copilot_ui.create_chat_popup
 
-	-- Add autocommands to the group for the new buffer
-	vim.api.nvim_create_autocmd({ "InsertEnter", "InsertCharPre" }, {
-		group = group,
-		buffer = popup.bufnr,
-		callback = function()
-			vim.cmd("stopinsert")
-		end,
-	})
-	return popup
-end
+local input_popup, layout, chat_popup, previous_role, whole_text,completed,current_line
 
--- Function to create an input popup
-local function create_input_popup(on_submit)
-	local prompt = "> "
-	local popup_options = {
-		relative = "window",
-		position = {
-			row = 1,
-			col = 0,
-		},
-		size = 20,
-		border = {
-			style = "rounded",
-			text = {
-				top = " Input ",
-				top_align = "center",
-			},
-		},
-		win_options = {
-			winblend = 10,
-			winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
-		},
-		buf_options = {
-			filetype = "markdown"
-		},
-	}
+local function append_to_chat(character, role)
+	local bufnr = chat_popup.bufnr
 
-	local input = NuiInput(popup_options, {
-		prompt = prompt,
-		on_close = function()
-			chat_popup = nil
+	-- Initialize `whole_text` if the role changes
+	if role ~= previous_role then
+		current_line = vim.api.nvim_buf_line_count(bufnr)
+		if current_line == 1 then
+		    current_line = current_line + 1
+		else
+		    current_line = current_line + 2
 		end
 
-	})
-	vim.keymap.set({ "n", "i" }, "<CR>", function()
-		local value = string.sub(vim.api.nvim_get_current_line(), vim.fn.strwidth(prompt) + 1)
-		on_submit(value)
-	end, { buffer = input.bufnr })
-	return input
+		vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "","" })
+		previous_role = role
+		whole_text = {role .. ": "}
+	end
+
+	if type(character) == "table" then
+	    whole_text = character
+	elseif string.find(character, "\n") ~= nil then
+	    local lines = vim.split(character, "\n", true)
+	    for i, line in ipairs(lines) do
+	        if i == 1 then
+	            whole_text[#whole_text] = whole_text[#whole_text] .. line
+	        else
+	            table.insert(whole_text, line)
+	        end
+	    end
+	else
+	    -- Append character to the last element of `whole_text`
+	    whole_text[#whole_text] = whole_text[#whole_text] .. character
+	end
+
+
+	-- Set the lines in the buffer
+	vim.api.nvim_buf_set_lines(bufnr, current_line, -1, false, whole_text)
 end
 
-local function append_to_chat(text)
-	local bufnr = chat_popup.bufnr
-	current_line = current_line + 2
-	vim.api.nvim_buf_set_lines(bufnr, current_line, -1, false, { text })
-end
+
 
 
 local function setup()
+	if layout ~= nil then
+		layout:unmount()
+	end
 	chat_popup = create_chat_popup()
 
 	local function on_submit(value)
-		if value:match("^%s*$") then
+		local has_non_space_string = false
+		local lines = {}
+		local content = ""
+		for _, v in ipairs(value) do
+			v = v:sub(3) -- Remove the prompt
+			content = content .. "\n" .. v
+			table.insert(lines, v)
+			if v:match("%S") then
+				has_non_space_string = true
+			end
+		end
+
+		if not has_non_space_string and completed == true then
 			return
 		end
-		vim.fn.PiecesCopilotSendQuestion(value)
+		vim.fn.PiecesCopilotSendQuestion(content)
+		completed = false
 		vim.api.nvim_buf_set_lines(input_popup.bufnr, 0, -1, false, { "" })
-		append_to_chat(value)
+		append_to_chat(lines,"User")
 	end
 
 
@@ -126,5 +104,6 @@ end
 
 return {
 	setup = setup,
-	append_to_chat = append_to_chat
+	append_to_chat = append_to_chat,
+	completed = function(value) completed = value end,
 }

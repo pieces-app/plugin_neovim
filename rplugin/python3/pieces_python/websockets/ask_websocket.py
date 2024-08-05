@@ -20,12 +20,14 @@ class AskStreamWS(BaseWebsocket):
 
 			for answer in answers:
 				Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
-					require("pieces_copilot").append_to_chat({answer})
-					print({answer})
+					require("pieces_copilot").append_to_chat([=[{answer.text}]=],"Copilot")
 				""")
 		
 		if message.status == "COMPLETED":
 			self.conversation_id = message.conversation
+			Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
+				require("pieces_copilot").completed(True)
+			""")
 		elif message.status == "FAILED":
 			return # TODO display a failed message
 

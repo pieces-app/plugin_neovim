@@ -2,8 +2,12 @@ import pynvim
 from .settings import Settings
 from .api import get_version,version_check,is_pieces_opened
 from .websockets import ask_stream_ws,base_websocket
-from ._pieces_lib.pieces_os_client import QGPTStreamInput,QGPTQuestionInput,RelevantQGPTSeeds
-from .assets_snapshot import AssetSnapshot
+from ._pieces_lib.pieces_os_client import (QGPTStreamInput,
+											QGPTQuestionInput,
+											RelevantQGPTSeeds,
+											ConversationMessageApi,
+											ConversationsApi)
+from .streamed_identifiers.assets_snapshot import AssetSnapshot
 from .websockets.health_ws import HealthWS
 
 @pynvim.plugin
@@ -35,7 +39,6 @@ class Pieces:
 	@pynvim.function('PiecesCopilotSendQuestion',sync=True)
 	def send_question(self,args):
 		query = args[0]
-		self.nvim.command(f"echom '{query}'")
 		ask_stream_ws.send_message(QGPTStreamInput(
 			question=QGPTQuestionInput(
 				relevant=RelevantQGPTSeeds(iterable=[]),
@@ -56,6 +59,19 @@ class Pieces:
 		asset_id = args[0]
 		AssetSnapshot(asset_id).delete()
 
+	@pynvim.function('PiecesGetMessage',sync=True)
+	def get_message(self,args):
+		message_id = args[0]
+		message = ConversationMessageApi(Settings.api_client).message_specific_message_snapshot(message=message_id,transferables=True)
+		return f"{{role = '{message.role.value}', raw = [=[{message.fragment.string.raw}]=]}}"
+
+	@pynvim.function("PiecesSetConversation")
+	def set_conversation(self,args):
+		ask_stream_ws.conversation_id = args[0]
+
+	@pynvim.function("PiecesDeleteConversation")
+	def delete_conversation(self,args):
+		ConversationsApi(self.api_client).conversations_delete_specific_conversation(args[0])
 
 	@pynvim.function("PiecesVersionCheck", sync=True)
 	def version_check(self,args):
@@ -84,6 +100,11 @@ class Pieces:
 	@is_pieces_opened
 	def open_copilot(self):
 		self.nvim.exec_lua("require('pieces_copilot').setup()")
+
+	@pynvim.command("PiecesConversations")
+	@is_pieces_opened
+	def open_conversations(self):
+		self.nvim.exec_lua("require('pieces_copilot.conversations_ui').setup()")
 
 
 

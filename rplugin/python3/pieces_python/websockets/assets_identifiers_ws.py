@@ -1,6 +1,6 @@
 from .._pieces_lib.pieces_os_client import StreamedIdentifiers
 
-from ..assets_snapshot import AssetSnapshot
+from ..streamed_identifiers.assets_snapshot import AssetSnapshot
 from ..settings import Settings
 from .base_websocket import BaseWebsocket
 

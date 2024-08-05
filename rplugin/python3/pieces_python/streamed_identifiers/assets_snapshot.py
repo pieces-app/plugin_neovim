@@ -1,17 +1,21 @@
 from typing import Optional
 
 
-from .websockets.streamed_identifiers import StreamedIdentifiersCache
-from ._pieces_lib.pieces_os_client import (Asset, 
+from .streamed_identifiers import StreamedIdentifiersCache
+from .._pieces_lib.pieces_os_client import (Asset, 
 											AssetsApi,
 											AssetApi,
 											ClassificationSpecificEnum,
 											FormatApi,
 											ClassificationGenericEnum,
-											Annotation)
-from .settings import Settings
+											Annotation,
+											Format,
+											Classification)
+from ..settings import Settings
 
-from .file_map import file_map
+from ..file_map import file_map
+
+from typing import Optional, Union
 def api_call(id):
 	asset = AssetApi(Settings.api_client).asset_snapshot(asset = id)
 	push_to_lua(asset)
@@ -39,7 +43,7 @@ class AssetSnapshot(StreamedIdentifiersCache,
 		original = format_api.format_snapshot(self.asset.original.id, transferable=True)
 		if original.classification.generic == ClassificationGenericEnum.IMAGE:
 			# TODO: Ability to edit images
-			return
+			return Settings.nvim.async_call(Settings.nvim.err_write,"Can't edit an image formated asset")
 
 		if original.fragment.string.raw:
 			original.fragment.string.raw = data
@@ -50,11 +54,49 @@ class AssetSnapshot(StreamedIdentifiersCache,
 	def get_asset_raw(self) -> Optional[str]:
 		if not self.asset:
 			return
-		asset_reference = self.asset.original.reference
-		if asset_reference.fragment:
-			return asset_reference.fragment.string.raw
-		elif asset_reference.file.string:
-			return asset_reference.file.string.raw
+		if self.is_image():
+			content = self.get_ocr_content()
+			if content is None:
+				raise Exception('Unable to get OCR content')
+			return content
+		else:
+			return (
+				self.asset.original.reference.fragment.string.raw or
+				self.asset.preview.base.reference.fragment.string.raw or
+				''
+			)
+	
+	def is_image(self) -> bool:
+		return (
+			self.asset.original.reference.classification.generic ==
+			ClassificationGenericEnum.Image
+		)
+
+	def get_ocr_content(self) -> Optional[str]:
+		if not self.asset:
+			return
+		format = self.get_ocr_format(self.asset)
+		if format is None:
+			return
+		return self.ocr_from_format(format)
+	
+	@staticmethod
+	def get_ocr_format(src: Asset) -> Optional[Format]:
+		image_id = src.original.reference.analysis.image.ocr.raw.id if src.original and src.original.reference and src.original.reference.analysis and src.original.reference.analysis.image and src.original.reference.analysis.image.ocr and src.original.reference.analysis.image.ocr.raw and src.original.reference.analysis.image.ocr.raw.id else None
+		if image_id is None:
+			return None
+		return next((element for element in src.formats.iterable if element.id == image_id), None)
+	
+	@staticmethod
+	def ocr_from_format(src: Optional[Format]) -> Optional[str]:
+		if src is None:
+			return None
+		try:
+			return src.file.bytes.raw.decode('utf-8')
+		except Exception as e:
+			Settings.nvim.async_call(Settings.nvim.err_write,'Error in getting image code:', e)
+			return None
+
 	@property
 	def name(self) -> Optional[str]:
 		return self.asset.name if self.asset else None
@@ -71,6 +113,7 @@ class AssetSnapshot(StreamedIdentifiersCache,
 		for annotation in annotations:
 			if annotation.type == "DESCRIPTION":
 				return annotation
+
 	def delete(self):
 		delete_instance = AssetsApi(Settings.api_client)
 		delete_instance.assets_delete_asset(self._asset_id)
