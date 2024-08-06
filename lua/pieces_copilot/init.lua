@@ -7,6 +7,13 @@ local get_layout  = copilot_ui.layout
 
 local input_popup, layout, chat_popup, previous_role, whole_text,completed,current_line
 
+local function set_statusline()
+	local buf = vim.api.nvim_get_current_buf()
+	if buf == input_popup.bufnr or buf == chat_popup.bufnr then
+	    vim.wo.statusline = vim.fn.PiecesGetModel()
+	end
+end
+
 local function append_to_chat(character, role)
 	local bufnr = chat_popup.bufnr
 
@@ -50,7 +57,6 @@ end
 
 
 
-
 local function setup()
 	if layout ~= nil then
 		layout:unmount()
@@ -58,13 +64,11 @@ local function setup()
 	chat_popup = create_chat_popup()
 
 	local function on_submit(value)
+		set_statusline()
 		local has_non_space_string = false
-		local lines = {}
 		local content = ""
 		for _, v in ipairs(value) do
-			v = v:sub(3) -- Remove the prompt
 			content = content .. "\n" .. v
-			table.insert(lines, v)
 			if v:match("%S") then
 				has_non_space_string = true
 			end
@@ -73,10 +77,15 @@ local function setup()
 		if not has_non_space_string and completed == true then
 			return
 		end
-		vim.fn.PiecesCopilotSendQuestion(content)
-		completed = false
 		vim.api.nvim_buf_set_lines(input_popup.bufnr, 0, -1, false, { "" })
-		append_to_chat(lines,"USER")
+		local slash = slash_commands.handle_slash(value[1])
+		if slash==false then
+			vim.fn.PiecesCopilotSendQuestion(content)
+			completed = false
+			append_to_chat(value,"USER")
+		else
+			append_to_chat({slash,""},"SYSTEM")
+		end
 	end
 
 
@@ -85,13 +94,6 @@ local function setup()
 
 	layout = get_layout(chat_popup,input_popup)
 	layout:mount()
-
-	local function set_statusline()
-		local buf = vim.api.nvim_get_current_buf()
-		if buf == input_popup.bufnr or buf == chat_popup.bufnr then
-		    vim.wo.statusline = vim.fn.PiecesGetModel()
-		end
-	end
 
 	-- Create an autocommand to set the statusline whenever a buffer is entered
 	vim.api.nvim_create_autocmd({"BufEnter","BufWinEnter","ModeChanged" } , {
@@ -108,4 +110,5 @@ return {
 	setup = setup,
 	append_to_chat = append_to_chat,
 	completed = function(value) completed = value end,
+	set_statusline=set_statusline
 }

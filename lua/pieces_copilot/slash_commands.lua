@@ -1,35 +1,52 @@
 local M = {}
+local commands
 
-M.get_commands = function()
-  local commands = {
-    {
-      label = "/help",
-      insertText = "/help",
-      kind = vim.lsp.protocol.CompletionItemKind.Function,
-    },
-    {
-      label = "/change_model",
-      insertText = "/change_model",
-      kind = vim.lsp.protocol.CompletionItemKind.Function,
-      args = { "model1", "model2", "model3" }
-    }
-  }
-  return commands
-end
-M.filter_arg = function(command)
-  local commands = M.get_commands()
-
-  for _, value in ipairs(commands) do
-    if value.insertText == command then
-      if value.args then
-        return value.args
-      else
-        break
-      end
-    end
+-- Function to return the commands with the args
+local function _commands()
+  local table_str = vim.fn.PiecesGetModels()
+  local func, err = load("return " .. table_str)
+  if not func then
+      print("Error loading string:", err)
+      return
   end
-  return {}
+  local models_args = {}
+  for _ , value in ipairs(func()) do
+    table.insert(models_args,{
+      label = value,
+      insertText = value,
+      kind = vim.lsp.protocol.CompletionItemKind.Text
+    })
+  end
+
+  -- Define commands and their arguments in a structured table
+  return {
+      ["/change_model"] = {
+          label = "/change_model",
+          insertText = "/change_model",
+          kind = vim.lsp.protocol.CompletionItemKind.Function,
+          args = models_args,
+          fn = vim.fn.PiecesChangeModel
+      }
+  }
 end
+
+-- Function to get all commands
+M.get_commands = function()
+    local command_list = {}
+    for _, cmd in pairs(commands) do
+        table.insert(command_list, cmd)
+    end
+    return command_list
+end
+
+-- Function to get arguments for a specific command
+M.get_args = function(command)
+    if commands[command] then
+        return commands[command].args or {}
+    end
+    return {}
+end
+
 -- Define a function to check if the buffer is empty
 local function buffer_has_words()
     local bufnr = vim.api.nvim_get_current_buf()
@@ -38,11 +55,11 @@ local function buffer_has_words()
     -- Check if any line contains non-whitespace characters
     for _, line in ipairs(lines) do
         if line:match('%S') then
-          if first_word then
-            return false
-          else
-            first_word = true
-          end
+            if first_word then
+                return false
+            else
+                first_word = true
+            end
         end
     end
 
@@ -50,42 +67,70 @@ local function buffer_has_words()
 end
 
 local function setup_source()
-  local cmp = require('cmp')
-  local source = {}
-
-  source.complete = function(self, request, callback)
-    if buffer_has_words() then
-        local prev_context = request.context.prev_context
-        if prev_context then
-          local row = prev_context.cursor.row
-          local col = prev_context.cursor.col
-          local bufnr = prev_context.bufnr
-          local line = vim.api.nvim_buf_get_lines(bufnr, col,row, false)
-
-          callback({ items = M.filter_arg(line), isIncomplete = false })
-        end
-        local items = M.get_commands()
-        -- Call the callback with the completion items
-        callback({ items = items, isIncomplete = false })
-    else
-        -- Provide an empty result if no input
-        callback({ items = {}, isIncomplete = false })
+    local cmp = require('cmp')
+    local source = {}
+    source.new = function()
+        return setmetatable({}, { __index = source })
     end
-  end
 
-  cmp.register_source('pieces_slash_commands_input', source)
+    source.complete = function(self, request, callback)
+        local line = request.context.cursor_before_line
+        local command = line:match("^(/%S+)")
+        if command then
+            local args = M.get_args(command)
+            if #args > 0 then
+                callback({ items = args, isIncomplete = true })
+                return
+            end
+        end
+
+        if buffer_has_words() then
+            local items = M.get_commands()
+            callback({ items = items, isIncomplete = true })
+        else
+            -- Provide an empty result if no input
+            callback({ items = {}, isIncomplete = true })
+        end
+    end
+
+    cmp.register_source('pieces_slash_commands_input', source)
 end
 
 M.setup_buffer = function(bufnr)
-  -- Configure nvim-cmp for the specific buffer
-  require'cmp'.setup.buffer({
-    sources = {
-      { name = 'pieces_slash_commands_input' }
-    },
-  },bufnr)
-  vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+    -- Configure nvim-cmp for the specific buffer
+    -- Don't forget to set the commands reson for that is lua loads before python
+    if commands == nil then
+      commands = _commands()
+    end
+    require 'cmp'.setup.buffer({
+        sources = {
+            { name = 'pieces_slash_commands_input' }
+        },
+    }, bufnr)
+    vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 end
 
 setup_source()
+
+
+
+function M.handle_slash(line)
+    for command_name, command_list in pairs(commands) do
+        if line:sub(1, #command_name) == command_name then
+            -- Extract arguments if any
+            local arg_string = line:sub(#command_name + 2):match("^%s*(.-)%s*$") -- Trim leading/trailing whitespace
+
+            -- Check if the arg is valid
+            for _ , val in ipairs(command_list.args) do
+              if val.insertText == arg_string then
+                return command_list.fn(arg_string)
+              end
+            end
+            vim.notify(arg_string .. " is an invalid argument\n", "error")
+        end
+    end
+    return false
+end
+
 
 return M
