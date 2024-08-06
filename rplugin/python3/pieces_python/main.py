@@ -65,6 +65,10 @@ class Pieces:
 		message = ConversationMessageApi(Settings.api_client).message_specific_message_snapshot(message=message_id,transferables=True)
 		return f"{{role = '{message.role.value}', raw = [=[{message.fragment.string.raw}]=]}}"
 
+	@pynvim.function("PiecesGetModel",sync=True)
+	def get_model(self,args):
+		return Settings.model_name
+
 	@pynvim.function("PiecesSetConversation")
 	def set_conversation(self,args):
 		ask_stream_ws.conversation_id = args[0]
