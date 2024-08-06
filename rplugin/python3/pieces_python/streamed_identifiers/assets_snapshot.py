@@ -69,7 +69,7 @@ class AssetSnapshot(StreamedIdentifiersCache,
 	def is_image(self) -> bool:
 		return (
 			self.asset.original.reference.classification.generic ==
-			ClassificationGenericEnum.Image
+			ClassificationGenericEnum.IMAGE
 		)
 
 	def get_ocr_content(self) -> Optional[str]:
@@ -92,7 +92,7 @@ class AssetSnapshot(StreamedIdentifiersCache,
 		if src is None:
 			return None
 		try:
-			return src.file.bytes.raw.decode('utf-8')
+			return bytes(src.file.bytes.raw).decode('utf-8')
 		except Exception as e:
 			Settings.nvim.async_call(Settings.nvim.err_write,'Error in getting image code:', e)
 			return None
