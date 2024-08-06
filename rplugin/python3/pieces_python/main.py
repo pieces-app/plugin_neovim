@@ -69,6 +69,18 @@ class Pieces:
 	def get_model(self,args):
 		return Settings.model_name
 
+	@pynvim.function("PiecesGetModels",sync=True)
+	def get_models(self,args):
+		return"{" + ", ".join(f'"{value}"' for value in Settings.get_models_ids().keys()) + "}"
+
+	@pynvim.function("PiecesChangeModel",sync=True)
+	def change_model(self,args):
+		model_name = args[0]
+		if model_name in Settings.get_models_ids().keys():
+			Settings.model_name = model_name
+			return f"Set the current LLM model to {model_name} successfully"
+		return "Invalid Model name"
+
 	@pynvim.function("PiecesSetConversation")
 	def set_conversation(self,args):
 		ask_stream_ws.conversation_id = args[0]

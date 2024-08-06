@@ -14,9 +14,8 @@ class Settings:
 	application = None
 	models = None
 	host = ""
-	model_name = ""
 	_api_client = None
-	model_name = "GPT-4o Chat Model" # TODO: be changed later dependends on the user favorite
+	model_name = "GPT-4o Chat Model"
 	is_loaded = False
 
 	@classproperty

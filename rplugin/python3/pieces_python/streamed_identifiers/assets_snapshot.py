@@ -9,8 +9,7 @@ from .._pieces_lib.pieces_os_client import (Asset,
 											FormatApi,
 											ClassificationGenericEnum,
 											Annotation,
-											Format,
-											Classification)
+											Format)
 from ..settings import Settings
 
 from ..file_map import file_map
