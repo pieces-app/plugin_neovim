@@ -27,36 +27,36 @@ function M.setup()
 
 	local function update_list()
 	    local lines = {}
+	    local end_col, start_col, annotation_index
+
 	    for i, conversation in ipairs(conversations) do
 	        local base_name = conversation.name:gsub("\n", "\\n")
 	        if i == current_index then
-	            local highlighted_line = "> " .. base_name .. conversation.annotation
+	            local highlighted_line = "> " .. base_name .. " "
+	            start_col = #highlighted_line
+	            highlighted_line = highlighted_line .. conversation.annotation
+	            end_col = start_col + #conversation.annotation
+	            annotation_index = i - 1 -- Convert to 0-based index for highlighting
 	            table.insert(lines, highlighted_line)
 	        else
 	            table.insert(lines, " " .. base_name)
 	        end
 	    end
-	    -- print(vim.inspect(lines))
+
 	    vim.api.nvim_buf_set_lines(results_popup.bufnr, 0, -1, false, lines)
 
-	    -- Define a custom highlight group for gray color
-	    -- vim.cmd("highlight GrayAnnotation guifg=#808080")
-
-	    -- Apply the highlight to the annotation part
-	    for i, conversation in ipairs(conversations) do
-	        if i == current_index then
-	            local start_col = #("> " .. conversation.name:gsub("\n", "\\n"))
-	            local end_col = start_col + #conversation.annotation
-	            vim.api.nvim_buf_add_highlight(results_popup.bufnr, -1, "PiecesAnnotation", i-1, start_col, end_col)
-	        end
+	    -- Apply the highlight if annotation_index is valid
+	    if annotation_index then
+	        vim.api.nvim_buf_add_highlight(results_popup.bufnr, -1, "PiecesAnnotation", annotation_index, start_col, end_col)
 	    end
 
 	    local win_height = vim.api.nvim_win_get_height(results_popup.winid) - 5 -- Removing the borders
 	    local cursor_line = current_index - 1 -- Convert to 0-based index for nvim_win_set_cursor
-	    if cursor_line >= win_height or cursor_line-win_height < 0 then
+	    if cursor_line >= win_height or cursor_line - win_height < 0 then
 	        vim.api.nvim_win_set_cursor(results_popup.winid, { current_index, 0 })
 	    end
 	end
+
 
 	local function down_keymap()
 		if current_index < #conversations then
