@@ -1,6 +1,6 @@
 from .streamed_identifiers import StreamedIdentifiersCache
 from ..settings import Settings
-from .._pieces_lib.pieces_os_client import ConversationApi,Conversation
+from .._pieces_lib.pieces_os_client import ConversationApi,Conversation,AnnotationApi
 
 def api_call(id):
 	conversation = ConversationApi(Settings.api_client).conversation_get_specific_conversation(id)
@@ -18,12 +18,14 @@ class ConversationsSnapshot(StreamedIdentifiersCache,
 
 def push_to_lua(conversation:Conversation):
 	m = "{" + ", ".join(f"['{k}']='{v}'" for k, v in conversation.messages.indices.items()) + "}"
-	# Settings.nvim.async_call(Settings.nvim.out_write,m+'\n')
+
+	annotation = str(AnnotationApi(Settings.api_client).annotation_specific_annotation_snapshot(list(conversation.annotations.indices.keys())[0]).text).replace("\n"," ")
 	lua = f"""
 	require("pieces_copilot.conversations").append_conversations({{
 				name = [=[{conversation.name if conversation.name else "New Conversation"}]=],
 				id = "{conversation.id}",
-				messages = {m}
+				messages = {m},
+				annotation = [=[{annotation}]=]
 			}},{str(not ConversationsSnapshot.first_shot).lower()})
 	"""
 	Settings.nvim.async_call(Settings.nvim.exec_lua, lua)

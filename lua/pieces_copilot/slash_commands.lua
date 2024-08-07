@@ -98,7 +98,7 @@ end
 
 M.setup_buffer = function(bufnr)
     -- Configure nvim-cmp for the specific buffer
-    -- Don't forget to set the commands reson for that is lua loads before python
+    -- Don't forget to set the commands reason for that is lua loads before python
     if commands == nil then
       commands = _commands()
     end

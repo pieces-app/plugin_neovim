@@ -1,7 +1,7 @@
 M = {}
 function M.edit_asset(snippet)
     local buf = vim.api.nvim_create_buf(false, false)
-  
+
     vim.api.nvim_buf_set_option(buf, 'filetype', snippet.filetype)
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(snippet.raw, '\n'))
     vim.api.nvim_buf_set_name(buf,snippet.name)
