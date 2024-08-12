@@ -1,8 +1,7 @@
 local NuiPopup  = require('nui.popup')
-local NuiInput 	= require('nui.input')
 local NuiLayout = require('nui.layout')
 local NuiSplit  = require('nui.split')
-
+local make_buffer_read_only = require("pieces_utils").make_buffer_read_only
 local layout
 
 local function create_chat_popup()
@@ -25,18 +24,8 @@ local function create_chat_popup()
 		}
 	})
 
-	-- Create an autogroup
-	local group = vim.api.nvim_create_augroup("PreventInsertMode", { clear = true })
-
-	-- Add autocommands to the group for the new buffer
-	vim.api.nvim_create_autocmd({ "InsertEnter", "InsertCharPre" }, {
-		group = group,
-		buffer = popup.bufnr,
-		callback = function()
-			vim.cmd("stopinsert")
-		end,
-	})
-	return popup
+  make_buffer_read_only(popup.bufnr)
+  return popup
 end
 
 -- Function to create an input popup

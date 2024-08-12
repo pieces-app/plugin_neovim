@@ -5,6 +5,7 @@ local snippets = require('pieces_assets.assets')
 local icons = require('nvim-web-devicons')
 local edit_asset = require('pieces_assets.edit').edit_asset
 local delete_asset = require('pieces_assets.edit').delete_asset
+local make_buffer_read_only = require("pieces_utils").make_buffer_read_only
 
 local M = {}
 local current_index = 1
@@ -68,6 +69,8 @@ function M.setup()
 		},
 	})
 
+	make_buffer_read_only(results_popup.bufnr)
+	make_buffer_read_only(preview_popup.bufnr)
 	local layout = Layout({
 			position = "50%",
 			size = {
@@ -96,8 +99,9 @@ function M.setup()
 	        if i == current_index then
 	            -- Highlighted line (current selection)
 	            local highlighted_line = "> " .. base_name .. " "
+				local snippet_annotation = snippet.annotation:gsub("\n", " ")
 	            start_col = #highlighted_line
-	            highlighted_line = highlighted_line .. snippet.annotation
+	            highlighted_line = highlighted_line .. snippet_annotation
 	            end_col = start_col + #snippet.annotation
 	            annotation_index = i - 1 -- Convert to 0-based index for highlighting
 	            table.insert(lines, highlighted_line)

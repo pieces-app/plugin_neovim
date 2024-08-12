@@ -9,6 +9,7 @@ from ._pieces_lib.pieces_os_client import (QGPTStreamInput,
 											ConversationsApi)
 from .streamed_identifiers.assets_snapshot import AssetSnapshot
 from .websockets.health_ws import HealthWS
+from ._version import __version__
 
 @pynvim.plugin
 class Pieces:
@@ -104,6 +105,11 @@ class Pieces:
 	@is_pieces_opened
 	def get_version(self):
 		self.nvim.out_write(f"{get_version()}\n")
+
+	@pynvim.command('PiecesPluginVersion')
+	@is_pieces_opened
+	def get_plugin_version(self):
+		self.nvim.out_write(f"{__version__}\n")
 
 	## LUA COMMANDS
 	@pynvim.command("PiecesSnippets")
