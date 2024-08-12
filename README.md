@@ -58,7 +58,7 @@ After installing the plugin, you can configure the host by adding the following 
 require("pieces_config").host = "http://localhost:1000"
 ```
 
-By default the host will be http://localhost:1000 on Windows and MacOS and http://localhost:5323
+By default the host will be http://localhost:1000 on Windows and MacOS and http://localhost:5323 on Linux
 
 ## Usage
 
