@@ -1,6 +1,8 @@
-local NuiPopup = require('nui.popup')
-local NuiInput = require('nui.input')
-
+local NuiPopup  = require('nui.popup')
+local NuiLayout = require('nui.layout')
+local NuiSplit  = require('nui.split')
+local make_buffer_read_only = require("pieces_utils").make_buffer_read_only
+local layout
 
 local function create_chat_popup()
 	local popup = NuiPopup({
@@ -21,18 +23,9 @@ local function create_chat_popup()
 			filetype = "markdown"
 		}
 	})
-	-- Create an autogroup
-	local group = vim.api.nvim_create_augroup("PreventInsertMode", { clear = true })
 
-	-- Add autocommands to the group for the new buffer
-	vim.api.nvim_create_autocmd({ "InsertEnter", "InsertCharPre" }, {
-		group = group,
-		buffer = popup.bufnr,
-		callback = function()
-			vim.cmd("stopinsert")
-		end,
-	})
-	return popup
+  make_buffer_read_only(popup.bufnr)
+  return popup
 end
 
 -- Function to create an input popup
@@ -57,14 +50,14 @@ local function create_input_popup(on_submit)
 			winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
 		},
 		buf_options = {
-			filetype = "markdown"
+			bufhidden = "wipe"
 		},
 	}
 
-	local input = NuiInput(popup_options, {
+	local input = NuiPopup(popup_options, {
 		prompt = prompt,
 		on_close = function()
-			vim.api.nvim_command('close')
+			layout:unmount()
 		end,
 
 	})
@@ -82,7 +75,27 @@ local function create_input_popup(on_submit)
 	return input
 end
 
+local function get_layout(chat_popup,input_popup)
+	-- Create a vertical layout with chat_popup and input_popup
+	layout = NuiLayout(
+		NuiSplit({
+			relative = "editor",
+			position = "right",
+			size = "30%",
+		}),
+
+		NuiLayout.Box({
+			NuiLayout.Box({
+				NuiLayout.Box(chat_popup, { grow = 1 }),
+				NuiLayout.Box(input_popup, { size = 5 }),
+			}, { dir = "col", size = "100%" }),
+		})
+	)
+	return layout
+end
+
 return {
 	create_input_popup = create_input_popup,
 	create_chat_popup = create_chat_popup,
+	layout=get_layout
 }

@@ -9,6 +9,7 @@ from ._pieces_lib.pieces_os_client import (QGPTStreamInput,
 											ConversationsApi)
 from .streamed_identifiers.assets_snapshot import AssetSnapshot
 from .websockets.health_ws import HealthWS
+from ._version import __version__
 
 @pynvim.plugin
 class Pieces:
@@ -65,6 +66,22 @@ class Pieces:
 		message = ConversationMessageApi(Settings.api_client).message_specific_message_snapshot(message=message_id,transferables=True)
 		return f"{{role = '{message.role.value}', raw = [=[{message.fragment.string.raw}]=]}}"
 
+	@pynvim.function("PiecesGetModel",sync=True)
+	def get_model(self,args):
+		return Settings.model_name
+
+	@pynvim.function("PiecesGetModels",sync=True)
+	def get_models(self,args):
+		return"{" + ", ".join(f'"{value}"' for value in Settings.get_models_ids().keys()) + "}"
+
+	@pynvim.function("PiecesChangeModel",sync=True)
+	def change_model(self,args):
+		model_name = args[0]
+		if model_name in Settings.get_models_ids().keys():
+			Settings.model_name = model_name
+			return f"Set the current LLM model to {model_name} successfully"
+		return "Invalid Model name"
+
 	@pynvim.function("PiecesSetConversation")
 	def set_conversation(self,args):
 		ask_stream_ws.conversation_id = args[0]
@@ -88,6 +105,11 @@ class Pieces:
 	@is_pieces_opened
 	def get_version(self):
 		self.nvim.out_write(f"{get_version()}\n")
+
+	@pynvim.command('PiecesPluginVersion')
+	@is_pieces_opened
+	def get_plugin_version(self):
+		self.nvim.out_write(f"{__version__}\n")
 
 	## LUA COMMANDS
 	@pynvim.command("PiecesSnippets")
