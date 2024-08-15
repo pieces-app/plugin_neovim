@@ -1,4 +1,4 @@
-M = {}
+local M = {}
 function M.edit_asset(snippet)
     local buf = vim.api.nvim_create_buf(false, false)
 
