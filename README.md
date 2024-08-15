@@ -92,17 +92,20 @@ You can write the slash command in the Copilot input to enter a command.
 
 Opens a conversations list to choose a conversation from.
 
-- Press <del> on the selected conversation to delete it
-- Press <Up> arrow to go up in the conversation list
-- Press <Down> arrow to go down in the conversation list
-- Press <Enter> to open the conversation in the Copilot
+- Press `<del>` on the selected conversation to delete it
+- Press `<Up>` arrow to go up in the conversation list
+- Press `<Down>` arrow to go down in the conversation list
+- Press `<Enter>` to open the conversation in the Copilot
 
 ### `:PiecesSnippets`
 
 List the Snippets Saved
 
-- Press <del> on the selected snippet to delete it
-- Press <Up> arrow to go up in the snippet list
-- Press <Down> arrow to go down in the snippet list
-- Press <Enter> to open the snippet for you to edit, Also don't forget to save using the `:w` command to save the edited snippet 
+- Press `<del>` on the selected snippet to delete it
+- Press `<Up>` arrow to go up in the snippet list
+- Press `<Down>` arrow to go down in the snippet list
+- Press `<Enter>` to open the snippet for you to edit, Also don't forget to save using the `:w` command to save the edited snippet 
 
+### `:PiecesCreateSnippet`
+
+Creates a snippet from the selected area in the visual mode
