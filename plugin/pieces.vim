@@ -7,3 +7,6 @@ endfunction
 
 " Autocommand to run the function after NeoVim has fully started
 autocmd VimEnter * call RunPiecesStartup()
+
+
+command! -range=% PiecesCreateSnippet <line1>,<line2>lua require('pieces_assets.create').setup(<line1>, <line2>)

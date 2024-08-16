@@ -9,7 +9,13 @@ from .._pieces_lib.pieces_os_client import (Asset,
 											FormatApi,
 											ClassificationGenericEnum,
 											Annotation,
-											Format)
+											Format,
+											SeededAsset,
+											Seed,
+											SeededFormat,
+											SeededFragment,
+											TransferableString,
+											FragmentMetadata)
 from ..settings import Settings
 
 from ..file_map import file_map
@@ -116,6 +122,25 @@ class AssetSnapshot(StreamedIdentifiersCache,
 	def delete(self):
 		delete_instance = AssetsApi(Settings.api_client)
 		delete_instance.assets_delete_asset(self._asset_id)
+	
+	@classmethod
+	def create(cls, raw: str, metadata: Optional[FragmentMetadata] = None) -> str:
+		seed = Seed(
+			asset=SeededAsset(
+				application=Settings.get_application(),
+				format=SeededFormat(
+					fragment=SeededFragment(
+						string=TransferableString(raw=raw),
+						metadata=metadata
+					)
+				),
+				metadata=None
+			),
+			type="SEEDED_ASSET"
+		)
+
+		created_asset_id = AssetsApi(Settings.api_client).assets_create_new_asset(transferables=False, seed=seed).id
+		return created_asset_id
 
 def push_to_lua(asset):
 	asset_wrapper = AssetSnapshot(asset.id)
@@ -137,3 +162,5 @@ def push_to_lua(asset):
 			}},{str(not AssetSnapshot.first_shot).lower()})
 	"""
 	Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
+
+	
