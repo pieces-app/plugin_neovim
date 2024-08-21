@@ -10,6 +10,7 @@ from ._pieces_lib.pieces_os_client import (QGPTStreamInput,
 from .streamed_identifiers.assets_snapshot import AssetSnapshot
 from .websockets.health_ws import HealthWS
 from ._version import __version__
+from .auth import Auth
 
 @pynvim.plugin
 class Pieces:
@@ -28,6 +29,7 @@ class Pieces:
 
 	def _startup(self):
 		check,plugin = version_check()
+		self.auth = Auth()
 		if check:
 			Settings.get_application() # Connect to the connector API
 			base_websocket.BaseWebsocket.start_all()
@@ -110,6 +112,26 @@ class Pieces:
 	@is_pieces_opened
 	def get_plugin_version(self):
 		self.nvim.out_write(f"{__version__}\n")
+
+	@pynvim.command('PiecesLogin')
+	@is_pieces_opened
+	def login(self):
+		self.auth.login()
+
+	@pynvim.command('PiecesLogout')
+	@is_pieces_opened
+	def logout(self):
+		self.auth.logout()
+
+	@pynvim.command('PiecesConnectCloud')
+	@is_pieces_opened
+	def connect(self):
+		self.auth.connect()
+
+	@pynvim.command('PiecesDisconnectCloud')
+	@is_pieces_opened
+	def disconnect(self):
+		self.auth.disconnect()
 
 	## LUA COMMANDS
 	@pynvim.command("PiecesSnippets")
