@@ -110,7 +110,7 @@ class Pieces:
 	@pynvim.command('PiecesHealth')
 	@is_pieces_opened
 	def get_health(self):
-		health = "ok" if Settings.get_health() else "failed"
+		health = "OK" if Settings.get_health() else "Failed"
 		self.nvim.out_write(f"{health}\n")
 
 	@pynvim.command('PiecesOSVersion')
