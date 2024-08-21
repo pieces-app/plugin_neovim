@@ -1,3 +1,4 @@
+import threading
 from pieces_os_client import OSApi,AllocationsApi, UserProfile
 from typing import Optional
 from .settings import Settings
@@ -10,8 +11,19 @@ class Auth:
 		cls.user_profile = user
 
 	def login(self):
-		OSApi(Settings.api_client).sign_into_os()
-		self.connect()
+		thread = OSApi(Settings.api_client).sign_into_os(async_req=True)
+		
+		def run_allocation_async():
+			try:
+				thread.get(120)
+				self.connect
+			except:
+				pass
+		
+		t = threading.Thread(target=run_allocation_async)
+		t.start()
+
+
 
 	def logout(self):
 		OSApi(Settings.api_client).sign_out_of_os(async_req=True)
