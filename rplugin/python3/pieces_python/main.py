@@ -6,11 +6,16 @@ from ._pieces_lib.pieces_os_client import (QGPTStreamInput,
 											QGPTQuestionInput,
 											RelevantQGPTSeeds,
 											ConversationMessageApi,
-											ConversationsApi)
+											ConversationsApi,
+											FragmentMetadata)
 from .streamed_identifiers.assets_snapshot import AssetSnapshot
 from .websockets.health_ws import HealthWS
 from ._version import __version__
 from .auth import Auth
+from .file_map import file_map
+
+file_map_reverse = {v:k for k,v in file_map.items()}
+
 
 @pynvim.plugin
 class Pieces:
@@ -72,6 +77,14 @@ class Pieces:
 	def get_model(self,args):
 		return Settings.model_name
 
+
+	@pynvim.function("PiecesCreateSnippet",sync=False)
+	def create_asset(self,args): 
+		try: metadata = FragmentMetadata(ext=file_map_reverse.get(self.nvim.api.buf_get_option(0, 'filetype')))
+		except: metadata = None
+		AssetSnapshot.create(args[0], metadata)
+		self.nvim.out_write("Snippet created successfully\n")
+
 	@pynvim.function("PiecesGetModels",sync=True)
 	def get_models(self,args):
 		return"{" + ", ".join(f'"{value}"' for value in Settings.get_models_ids().keys()) + "}"
@@ -100,7 +113,7 @@ class Pieces:
 	@pynvim.command('PiecesHealth')
 	@is_pieces_opened
 	def get_health(self):
-		health = "ok" if Settings.get_health() else "failed"
+		health = "OK" if Settings.get_health() else "Failed"
 		self.nvim.out_write(f"{health}\n")
 
 	@pynvim.command('PiecesOSVersion')
@@ -149,6 +162,4 @@ class Pieces:
 	@is_pieces_opened
 	def open_conversations(self):
 		self.nvim.exec_lua("require('pieces_copilot.conversations_ui').setup()")
-
-
 

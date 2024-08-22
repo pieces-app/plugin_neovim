@@ -102,7 +102,8 @@ function M.setup()
 		["<Down>"] = down_keymap,
 		["<esc>"] = function() results_popup:unmount() end,
 		["<enter>"] = enter_keymap,
-		["<Del>"] = delete_keymap
+		["<Del>"] = delete_keymap,
+		["<kDel>"] = delete_keymap
 	}
 	local modes = { "i", "n" }
 

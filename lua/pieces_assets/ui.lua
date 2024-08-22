@@ -95,6 +95,7 @@ function M.setup()
 
 	    for i, snippet in ipairs(snippets_search_results) do
 	        local icon = icons.get_icon("dummy", snippet.language)
+	        icon = icon or ""
 	        local base_name = icon .. "  " .. snippet.name
 	        if i == current_index then
 	            -- Highlighted line (current selection)
@@ -169,8 +170,9 @@ function M.setup()
 		["<Down>"] = down_keymap,
 		["<esc>"] = function() layout:unmount() end,
 		["<enter>"] = enter_keymap,
-		["<Del>"] = delete_asset_keymap
-	}
+		["<Del>"] = delete_asset_keymap,
+		["<kDel>"] = delete_asset_keymap
+ 	}
 	local modes = { "i", "n" }
 
 	for key, func in pairs(keymaps) do
@@ -197,6 +199,7 @@ function M.setup()
 		local lines = {}
 		for _, result in ipairs(snippets_search_results) do
 			local icon = icons.get_icon("dummy", result.language)
+			icon = icon or ""
 			table.insert(lines, icon .. " " .. result.name)
 		end
 		vim.api.nvim_buf_set_lines(results_popup.bufnr, 0, -1, false, lines)

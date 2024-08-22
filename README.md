@@ -28,7 +28,7 @@ Plug 'pieces-app/plugin_neo_vim'
 call plug#end()
 ```
 
-2. Install the plugins by running `:PlugInstall` in Neovim.
+Install the plugins by running `:PlugInstall` in Neovim.
 
 ### Using packer.nvim
 
@@ -45,10 +45,15 @@ return require('packer').startup(function()
   use 'pieces-app/plugin_neo_vim'
 end)
 ```
+Install the plugins by running `:PackerSync` in Neovim.
 
-2. Install the plugins by running `:PackerSync` in Neovim.
+
+
+2. download python and pynvim (`pip install pynvim`)
 
 3. Run :UpdateRemotePlugins
+
+ 
 
 ## Configuration
 
@@ -60,20 +65,6 @@ require("pieces_config").host = "http://localhost:1000"
 
 By default the host will be http://localhost:1000 on Windows and MacOS and http://localhost:5323 on Linux
 
-## Usage
-
-Once installed and configured, you can start using Plugin Neo Vim by following the usage instructions provided in the [documentation](https://github.com/pieces-app/plugin_neo_vim).
-
-## Contributing
-
-Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to this project.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-```
-
-Feel free to customize the README further based on your specific needs and additional details about your plugin.
 ## Commands
 
 ### `:PiecesHealth`
@@ -101,16 +92,20 @@ You can write the slash command in the Copilot input to enter a command.
 
 Opens a conversations list to choose a conversation from.
 
-- Press <del> on the selected conversation to delete it
-- Press <Up> arrow to go up in the conversation list
-- Press <Down> arrow to go down in the conversation list
-- Press <Enter> to open the conversation in the Copilot
+- Press `<del>` on the selected conversation to delete it
+- Press `<Up>` arrow to go up in the conversation list
+- Press `<Down>` arrow to go down in the conversation list
+- Press `<Enter>` to open the conversation in the Copilot
 
 ### `:PiecesSnippets`
 
 List the Snippets Saved
 
-- Press <del> on the selected snippet to delete it
-- Press <Up> arrow to go up in the snippet list
-- Press <Down> arrow to go down in the snippet list
-- Press <Enter> to open the snippet for you to edit, Also don't forget to save using the `:w` command to save the edited snippet 
+- Press `<del>` on the selected snippet to delete it
+- Press `<Up>` arrow to go up in the snippet list
+- Press `<Down>` arrow to go down in the snippet list
+- Press `<Enter>` to open the snippet for you to edit, Also don't forget to save using the `:w` command to save the edited snippet 
+
+### `:PiecesCreateSnippet`
+
+Creates a snippet from the selected area in the visual mode
