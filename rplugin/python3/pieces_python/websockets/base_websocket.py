@@ -20,6 +20,7 @@ class BaseWebsocket(ABC):
 
 		BaseWebsocket.instances.append(self)
 
+	@property
 	@abstractmethod
 	def url(self) -> str:
 		"""The URL to connect to. Should be overridden."""
