@@ -13,7 +13,6 @@ from .websockets.health_ws import HealthWS
 from ._version import __version__
 from .auth import Auth
 from .file_map import file_map
-from .utils import convert_to_lua_table
 file_map_reverse = {v:k for k,v in file_map.items()}
 
 
