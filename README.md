@@ -67,45 +67,141 @@ By default the host will be http://localhost:1000 on Windows and MacOS and http:
 
 ## Commands
 
+The Pieces Neovim plugin provides several commands to interact with Pieces OS. Here's a list of available commands:
+
+## General Commands
+
 ### `:PiecesHealth`
 
-Check the Pieces OS Health 
+Check the health of Pieces OS.
+
+```vim
+:PiecesHealth
+```
 
 ### `:PiecesOSVersion`
 
-Displays the Pieces OS version
+Display the version of Pieces OS.
 
+```vim
+:PiecesOSVersion
+```
 ### `:PiecesPluginVersion`
 
-Displays the current version of the plugin
+Display the current version of the Pieces Neovim plugin.
+
+```vim
+:PiecesPluginVersion
+```
+
+## Copilot Commands 
 
 ### `:PiecesCopilot`
 
-Opens the Pieces Copilot in a split view
+Open the Pieces Copilot window in a split view. 
 
-#### Slash commands
-You can write the slash command in the Copilot input to enter a command.
+```vim
+:PiecesCopilot
+```
 
-- change_model: used to change the current LLM model
+#### Using the Copilot Chat
+
+1. Press `i` to enter insert mode and type your message.
+2. Press `<Esc>` to exit insert mode.
+3. Press `<Enter>` to send the message to Pieces Copilot and see the response.
+
+#### Copilot Chat Commands
+
+In the Copilot chat input, you can use slash commands to perform specific actions:
+
+####  `/change_model`
+
+Change the current LLM model.
 
 ### `:PiecesConversations`
 
-Opens a conversations list to choose a conversation from.
+Open a list of Pieces Copilot conversations to choose from.
 
-- Press `<del>` on the selected conversation to delete it
-- Press `<Up>` arrow to go up in the conversation list
-- Press `<Down>` arrow to go down in the conversation list
-- Press `<Enter>` to open the conversation in the Copilot
+```vim
+:PiecesConversations
+```
+Navigation and actions:
+- Press `<Del>` on the selected conversation to delete it
+- Use `<Up>` and `<Down>` arrow keys to navigate the conversation list
+- Press `<Enter>` to open the selected conversation in the Copilot
+
+## Asset Management Commands
 
 ### `:PiecesSnippets`
 
-List the Snippets Saved
+List all of the saved snippets.
 
-- Press `<del>` on the selected snippet to delete it
-- Press `<Up>` arrow to go up in the snippet list
-- Press `<Down>` arrow to go down in the snippet list
-- Press `<Enter>` to open the snippet for you to edit, Also don't forget to save using the `:w` command to save the edited snippet 
+```vim
+:PiecesSnippets
+```
+Navigation and actions:
+- Use `<Up>` and `<Down>` arrow keys to navigate the snippet list.
+- Press `<Enter>` to open the selected snippet for editing.
+- Press `<Del>` on the selected snippet to delete it.
+- When editing a snippet:
+  1. Press `i` to enter insert mode and make changes.
+  2. Press `<Esc>` to exit insert mode.
+  3. Type `:w` and press `<Enter>` to save the edited snippet.
+  4. Type `:q` and press `<Enter>` to exit the snippet editor.
+
 
 ### `:PiecesCreateSnippet`
 
-Creates a snippet from the selected area in the visual mode
+Create a snippet from the selected text in the visual mode.
+
+```vim
+:PiecesCreateSnippet
+```
+
+1. Enter visual mode by pressing `v` in normal mode.
+2. Select the desired text using arrow keys or Vim motions.
+3. Type `:PiecesCreateSnippet` and press `<Enter>`.
+
+## Auth Commands
+
+### `:PiecesAccount`
+
+Shows your Pieces account information such as Username, Email, Personal Cloud Status and Personal Domain in a new window.  
+
+```vim
+:PiecesAccount
+```
+You can also logout from your account by going to the `Logout` option in the Auth status menu and then press `enter`. You will be logged out of your Pieces account.
+
+### `:PiecesLogin`
+
+Login to your Pieces account.
+
+```vim
+:PiecesLogin
+```
+
+### `:PiecesLogout`
+
+Logout of your Pieces account.
+
+```vim
+:PiecesLogout
+```
+
+### `:PiecesConnectCloud`
+
+Connect to your Personal Pieces Cloud. 
+
+```vim
+:PiecesConnectCloud
+```
+
+### `:PiecesDisconnectCloud`
+
+Disconnect from your Personal Pieces Cloud.
+
+```vim
+:PiecesDisconnectCloud
+```
+ Note: In order to use the Personal Pieces Cloud commands, you must have an account connected to Pieces OS.
