@@ -1,5 +1,3 @@
-from .settings import Settings
-
 def convert_to_lua_table(python_dict):
     """
     Convert a Python dictionary to a Lua table representation.
