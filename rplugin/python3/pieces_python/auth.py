@@ -2,13 +2,43 @@ from pieces_os_client import OSApi,AllocationsApi, UserProfile
 from typing import Optional
 from .settings import Settings
 import concurrent.futures
+from .utils import convert_to_lua_table
 
 class Auth:
 	user_profile:Optional[UserProfile] = None
 	
 	@classmethod
-	def on_user_callback(cls,user):
+	def on_user_callback(cls,user:Optional[UserProfile]):
 		cls.user_profile = user
+		if not user:
+			cls.send_lua()
+		else:
+			cls.send_lua(cls.get_compact_dict(cls.user_profile))
+		
+
+	@staticmethod
+	def send_lua(python_dict=None):
+		lua_str = "nil"
+		if python_dict:
+			lua_str = convert_to_lua_table(python_dict)
+		Settings.nvim.async_call(Settings.nvim.exec_lua,f"require('pieces_auth').update_user({lua_str})")
+
+	@staticmethod
+	def get_compact_dict(user):
+		# Updating lua cache
+		lua_out = {
+			"username":user.name or user.username,
+			"email":user.email
+		}
+		allocation = user.allocation
+		if allocation:
+			status = allocation.status.cloud
+			lua_out["allocation"] = {"status":status.value}
+			if allocation.urls.vanity:
+				url = allocation.urls.vanity.url
+				lua_out["url"] = url
+		return lua_out
+
 
 	def login(self):
 		t = OSApi(Settings.api_client).sign_into_os(async_req=True)
@@ -22,6 +52,9 @@ class Auth:
 
 	def connect(self):
 		user = self.user_profile
+		compact = self.get_compact_dict(user)
+		compact["is_connecting"] = True
+		self.send_lua(compact)
 		if user: # User logged in
 			t = AllocationsApi(Settings.api_client).allocations_connect_new_cloud(user,async_req=True)
 			self.print_info(t,"Connected to the personal cloud successfully",
@@ -33,7 +66,7 @@ class Auth:
 			self.print_info(t,"Disconnected from the personal cloud successfully","Failed to disconnect from the personal cloud")
 	
 	@staticmethod
-	def print_info(thread,failed_message,success_message,on_success=lambda: None):
+	def print_info(thread,success_message,failed_message,on_success=lambda: None):
 		with concurrent.futures.ThreadPoolExecutor() as executor:
 			future = executor.submit(thread.get, 120)
 			try:
