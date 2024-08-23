@@ -14,8 +14,8 @@ local function create_ui(content, default_hl)
     },
     position = "50%",
     size = {
-      width = "60%",
-      height = "50%",
+      width = "50",
+      height = #content + 1,
     },
     win_options = {
       wrap = true,
