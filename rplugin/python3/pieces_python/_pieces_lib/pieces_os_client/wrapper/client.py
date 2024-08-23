@@ -39,7 +39,7 @@ class PiecesClient:
             connect_websockets = config["connect_websockets"]
             del config["connect_websockets"]
 
-        self.config = Configuration(**config)
+        self.config = Configuration(**config,host=host)
 
         self.api_client = ApiClient(self.config)
 
