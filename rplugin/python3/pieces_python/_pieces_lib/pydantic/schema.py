@@ -29,7 +29,7 @@ from typing import (
 )
 from uuid import UUID
 
-from typing_extensions import Annotated, Literal
+from pieces_python._pieces_lib.typing_extensions import Annotated, Literal
 
 from .fields import (
     MAPPING_LIKE_SHAPES,

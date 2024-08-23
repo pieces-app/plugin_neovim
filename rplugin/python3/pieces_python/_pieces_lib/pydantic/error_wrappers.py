@@ -5,7 +5,7 @@ from .json import pydantic_encoder
 from .utils import Representation
 
 if TYPE_CHECKING:
-    from typing_extensions import TypedDict
+    from pieces_python._pieces_lib.typing_extensions import TypedDict
 
     from .config import BaseConfig
     from .types import ModelOrDc

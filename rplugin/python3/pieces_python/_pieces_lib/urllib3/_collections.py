@@ -10,7 +10,7 @@ if typing.TYPE_CHECKING:
     # dependency, and is not available at runtime.
     from typing import Protocol
 
-    from typing_extensions import Self
+    from pieces_python._pieces_lib.typing_extensions import Self
 
     class HasGettableStringKeys(Protocol):
         def keys(self) -> typing.Iterator[str]:
