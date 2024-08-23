@@ -13,6 +13,7 @@ from .websockets.health_ws import HealthWS
 from ._version import __version__
 from .auth import Auth
 from .file_map import file_map
+import semver
 
 file_map_reverse = {v:k for k,v in file_map.items()}
 
@@ -29,6 +30,16 @@ class Pieces:
 	@pynvim.function("PiecesStartup")
 	def startup(self,args):
 		"""START THE WEBSOCKETS!"""
+		try:
+			latest_version = semver.VersionInfo.parse(Settings.get_latest_tag())
+			if latest_version > semver.VersionInfo.parse(__version__):
+				self.nvim.command('echohl WarningMsg')
+				self.nvim.command(f'echomsg "A new update for the Pieces Plugin is now available! Please update to the latest version to enjoy improved functionality and enhanced performance."')
+				self.nvim.command('echohl None')
+		except: # Internet issues or status code is not 200
+			pass
+		
+
 		self.health_ws = HealthWS(self._startup)
 		self.health_ws.start()
 
@@ -36,6 +47,9 @@ class Pieces:
 		check,plugin = version_check()
 		self.auth = Auth()
 		if check:
+			if Settings.load_settings().get("version",__version__) != __version__:
+				Settings.update_settings(version=__version__)
+				self.nvim.async_call(self.nvim.command,'call PiecesRunRemotePlugins()')
 			Settings.get_application() # Connect to the connector API
 			base_websocket.BaseWebsocket.start_all()
 		else:
@@ -162,4 +176,11 @@ class Pieces:
 	@is_pieces_opened
 	def open_conversations(self):
 		self.nvim.exec_lua("require('pieces_copilot.conversations_ui').setup()")
+
+	@pynvim.command('PiecesCreateSnippet', range='', nargs='*')
+	@is_pieces_opened
+	def pieces_create_snippet(self, args, range):
+		line1 = range[0]
+		line2 = range[1]
+		self.nvim.command(f'call luaeval("require(\'pieces_assets.create\').setup({line1}, {line2})")')
 

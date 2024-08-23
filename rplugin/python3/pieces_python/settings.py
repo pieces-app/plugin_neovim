@@ -2,6 +2,10 @@ from ._pieces_lib import pieces_os_client as pos_client
 from typing import Dict
 import pynvim
 from ._version import __version__
+from ._pieces_lib.platformdirs import user_data_dir
+from pathlib import Path
+import json
+import urllib.request
 
 
 class classproperty(property):
@@ -15,8 +19,20 @@ class Settings:
 	models = None
 	host = ""
 	_api_client = None
-	model_name = "GPT-4o Chat Model"
 	is_loaded = False
+	pieces_data_dir = user_data_dir(appauthor="pieces", appname="neovim",ensure_exists=True)
+	settings_file = Path(pieces_data_dir, "settings.json")
+
+	@classproperty
+	def model_name(cls):
+		if not hasattr(cls,"_model_name"):
+			cls._model_name = cls.load_settings().get("model_name","GPT-4o Chat Model")
+		return cls._model_name
+
+	@model_name.setter
+	def model_name(cls,value):
+		cls.update_settings(model_name=value)
+		cls._model_name = value
 
 	@classproperty
 	def model_id(cls):
@@ -105,3 +121,32 @@ class Settings:
 
 		cls.api_client = pos_client.ApiClient(configuration)
 		return cls.api_client
+
+	@classmethod
+	def load_settings(cls):
+		with open(cls.settings_file, 'r') as file:
+			try:
+				data = json.load(file)
+				return data
+			except json.JSONDecodeError:
+				return {}
+
+	@classmethod
+	def update_settings(cls,**kwargs):
+		data = cls.load_settings()
+		data.update(kwargs)
+
+		with open(cls.settings_file, "w") as f:
+			json.dump(data, f)
+
+	@staticmethod
+	def get_latest_tag():
+		with urllib.request.urlopen("https://api.github.com/repos/pieces-app/plugin_neo_vim/tags") as response:
+			if response.status == 200:
+				data = response.read()
+				tags = json.loads(data)
+
+				if tags:
+					return tags[0]['name']
+
+
