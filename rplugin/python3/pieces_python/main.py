@@ -121,6 +121,13 @@ class Pieces:
 	@pynvim.function("PiecesVersionCheck", sync=True)
 	def version_check(self,args):
 		return version_check()[0]
+	@pynvim.function("PiecesLogin", sync=True)
+	def login_function(self,args):
+		"""
+			first args if true it will show the ui
+		"""
+		if args:
+			self.auth.login(args[0])
 
 	## PYTHON COMMANDS
 	@pynvim.command('PiecesHealth')

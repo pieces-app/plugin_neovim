@@ -77,7 +77,7 @@ end
 local function login_page()
   local choice = vim.fn.confirm("Note this command only works if you are logged in, Do you want to login?", "&Yes\n&No", 1)
   if choice == 1 then
-    vim.cmd("PiecesLogin")
+    vim.fn.PiecesLogin(true)
   end
 end
 

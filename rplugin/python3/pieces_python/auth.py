@@ -41,10 +41,14 @@ class Auth:
 		return lua_out
 
 
-	def login(self):
+	def login(self,show_ui=False):
+		def on_login_success():
+			Settings.nvim.command("PiecesAccount")
+			self.connect()
+		callback = on_login_success if show_ui else lambda:None
 		t = OSApi(Settings.api_client).sign_into_os(async_req=True)
 		self.print_info(t,"You have been logged in successfully.",
-			"Oops! Something went wrong. We could not log you in please try again",self.connect)
+			"Oops! Something went wrong. We could not log you in please try again",callback)
 
 	def logout(self):
 		t = OSApi(Settings.api_client).sign_out_of_os(async_req=True)
@@ -78,5 +82,3 @@ class Auth:
 			except:
 				Settings.nvim.err_write(f"{failed_message}\n")
 
-
-AuthWS(Auth.on_user_callback)
