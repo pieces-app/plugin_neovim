@@ -66,7 +66,6 @@ require("pieces_config").host = "http://localhost:1000"
 By default the host will be http://localhost:1000 on Windows and MacOS and http://localhost:5323 on Linux
 
 ## Commands
-# Commands
 
 The Pieces Neovim plugin provides several commands to interact with Pieces OS. Here's a list of available commands:
 
