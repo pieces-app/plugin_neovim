@@ -1,6 +1,6 @@
 from typing import Optional
 
-from .websockets.base_websocket import BaseWebsocket
+from ._pieces_lib.pieces_os_client.wrapper.websockets import BaseWebsocket
 from ._pieces_lib import pieces_os_client as pos_client
 from ._pieces_lib import semver
 from .settings import Settings
