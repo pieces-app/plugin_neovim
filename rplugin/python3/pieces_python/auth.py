@@ -1,4 +1,4 @@
-from pieces_os_client import OSApi,AllocationsApi, UserProfile
+from ._pieces_lib.pieces_os_client import OSApi,AllocationsApi, UserProfile
 from typing import Optional
 from .settings import Settings
 import concurrent.futures
