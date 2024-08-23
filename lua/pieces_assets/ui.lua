@@ -172,7 +172,8 @@ function M.setup()
 		["<esc>"] = function() layout:unmount() end,
 		["<enter>"] = enter_keymap,
 		["<Del>"] = delete_asset_keymap,
-		["<kDel>"] = delete_asset_keymap
+		["<kDel>"] = delete_asset_keymap,
+		["<BS>"] = delete_asset_keymap  -- Add this line for macOS
  	}
 	local modes = { "i", "n" }
 
