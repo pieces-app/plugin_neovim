@@ -2,34 +2,14 @@ local M = {}
 local NuiPopup  = require('nui.popup')
 local user = nil
 local make_buffer_read_only = require("pieces_utils").make_buffer_read_only
-local function create_ui(content, default_hl)
-  local status_popup = NuiPopup({
-    relative = "editor",
-    border = {
-      highlight = "FloatBorder",
-      style = "rounded",
-      text = {
-        top = " Pieces Auth Status ",
-      },
-    },
-    position = "50%",
-    size = {
-      width = "50",
-      height = #content + 1,
-    },
-    win_options = {
-      wrap = true,
-      linebreak = true,
-      foldcolumn = "1",
-      winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
-    }
-  })
+local status_popup
 
-  status_popup:mount()
-  make_buffer_read_only(status_popup.bufnr)
-
+local function update_content(content,default_hl)
   local ns_id = vim.api.nvim_create_namespace('pieces_ui')
   local logout_line
+  if not content then
+    return
+  end
   for i, line in ipairs(content) do
     local hl = line[2] or default_hl
     local text = line[1]
@@ -64,6 +44,34 @@ local function create_ui(content, default_hl)
     end
   end
   status_popup:map("n",'<Enter>' , handle_click, { noremap = true })
+end
+
+local function create_ui(content, default_hl)
+  status_popup = NuiPopup({
+    relative = "editor",
+    border = {
+      highlight = "FloatBorder",
+      style = "rounded",
+      text = {
+        top = " Pieces Account ",
+      },
+    },
+    position = "50%",
+    size = {
+      width = "60",
+      height = #content + 1,
+    },
+    win_options = {
+      wrap = true,
+      linebreak = true,
+      foldcolumn = "1",
+      winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+    }
+  })
+
+  status_popup:mount()
+  make_buffer_read_only(status_popup.bufnr)
+  update_content(content,default_hl)
 end
 
 local function login_page()
@@ -109,19 +117,28 @@ local function logout_page()
   )
   content = vim.list_extend(content, { { "Logout", "PiecesUrl" } })
 
-  create_ui(content, "NormalFloat")
+  return content
 end
 
 function M.setup()
   if user == nil then
     login_page()
   else
-    logout_page()
+    create_ui(logout_page(), "NormalFloat")
   end
 end
 
 function M.update_user(user_table)
   user = user_table
+  if status_popup then
+    if type(status_popup.winid) == "number" and vim.api.nvim_win_is_valid(status_popup.winid) then
+      if user == nil then
+        status_popup:unmount()
+      else
+        update_content(logout_page(),"NormalFloat")
+      end
+    end
+  end
 end
 
 return M

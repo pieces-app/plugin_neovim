@@ -164,6 +164,7 @@ function M.setup()
 	local function delete_asset_keymap()
 		delete_asset(snippets_search_results[current_index])
 		update_list()
+		update_preview()
 	end
 	-- Key mappings for navigation
 	local keymaps = {
