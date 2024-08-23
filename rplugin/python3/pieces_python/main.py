@@ -87,7 +87,7 @@ class Pieces:
 
 	@pynvim.function("PiecesGetModels",sync=True)
 	def get_models(self,args):
-		return convert_to_lua_table(Settings.get_models_ids().keys())
+		return"{" + ", ".join(f'"{value}"' for value in Settings.get_models_ids().keys()) + "}"
 
 	@pynvim.function("PiecesChangeModel",sync=True)
 	def change_model(self,args):
