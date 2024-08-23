@@ -13,7 +13,7 @@ from .websockets.health_ws import HealthWS
 from ._version import __version__
 from .auth import Auth
 from .file_map import file_map
-
+from .utils import convert_to_lua_table
 file_map_reverse = {v:k for k,v in file_map.items()}
 
 
@@ -87,7 +87,7 @@ class Pieces:
 
 	@pynvim.function("PiecesGetModels",sync=True)
 	def get_models(self,args):
-		return"{" + ", ".join(f'"{value}"' for value in Settings.get_models_ids().keys()) + "}"
+		return convert_to_lua_table(Settings.get_models_ids().keys())
 
 	@pynvim.function("PiecesChangeModel",sync=True)
 	def change_model(self,args):
@@ -162,4 +162,9 @@ class Pieces:
 	@is_pieces_opened
 	def open_conversations(self):
 		self.nvim.exec_lua("require('pieces_copilot.conversations_ui').setup()")
+
+	@pynvim.command("PiecesStatus")
+	@is_pieces_opened
+	def auth_command(self):
+		self.nvim.exec_lua("require('pieces_auth').setup()")
 
