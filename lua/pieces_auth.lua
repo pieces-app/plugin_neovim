@@ -91,9 +91,9 @@ local function get_allocation_status()
     end
   else
     if user.is_connecting then
-      allocation_status = { { "Cloud Status: Connecting", "PiecesWarningMsg" } }
+      allocation_status = { { "Cloud Status: • Connecting", "PiecesWarningMsg" } }
     else
-      allocation_status = { { "Cloud Status: Disconnected", "PiecesErrorMsg" } }
+      allocation_status = { { "Cloud Status: • Disconnected", "PiecesErrorMsg" } }
     end
   end
 
