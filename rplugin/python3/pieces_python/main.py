@@ -14,7 +14,6 @@ from ._version import __version__
 from .auth import Auth
 from .file_map import file_map
 import semver
-
 file_map_reverse = {v:k for k,v in file_map.items()}
 
 
@@ -176,6 +175,12 @@ class Pieces:
 	@is_pieces_opened
 	def open_conversations(self):
 		self.nvim.exec_lua("require('pieces_copilot.conversations_ui').setup()")
+
+
+	@pynvim.command("PiecesAccount")
+	@is_pieces_opened
+	def auth_command(self):
+		self.nvim.exec_lua("require('pieces_auth').setup()")
 
 	@pynvim.command('PiecesCreateSnippet', range='', nargs='*')
 	@is_pieces_opened

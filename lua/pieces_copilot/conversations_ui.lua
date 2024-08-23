@@ -8,6 +8,7 @@ local conversations = conversations_module.conversations
 function M.setup()
 	-- Create the results popup
 	local results_popup = Popup({
+		relative = "editor",
 		position = "50%",
 		size = {
 			width = "60%",

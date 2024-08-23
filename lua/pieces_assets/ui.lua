@@ -72,6 +72,7 @@ function M.setup()
 	make_buffer_read_only(results_popup.bufnr)
 	make_buffer_read_only(preview_popup.bufnr)
 	local layout = Layout({
+			relative = "editor",
 			position = "50%",
 			size = {
 				width = "90%",
