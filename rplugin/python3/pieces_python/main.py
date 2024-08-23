@@ -177,7 +177,7 @@ class Pieces:
 		self.nvim.exec_lua("require('pieces_copilot.conversations_ui').setup()")
 
 
-	@pynvim.command("PiecesStatus")
+	@pynvim.command("PiecesAccount")
 	@is_pieces_opened
 	def auth_command(self):
 		self.nvim.exec_lua("require('pieces_auth').setup()")
