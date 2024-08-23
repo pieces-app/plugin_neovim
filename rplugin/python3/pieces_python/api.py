@@ -1,12 +1,15 @@
 from typing import Optional
+
+from .websockets.base_websocket import BaseWebsocket
 from ._pieces_lib import pieces_os_client as pos_client
 from ._pieces_lib import semver
 from .settings import Settings
 import time
 import subprocess
 from ._version import __version__
+import concurrent.futures
 
-PIECES_OS_MIN_VERSION = "10.0.3"  # Minium version (10.0.0)
+PIECES_OS_MIN_VERSION = "10.1.3"  # Minium version (10.0.0)
 PIECES_OS_MAX_VERSION = "11.0.0" # Maxium version (11.0.0)
 
 def get_version() -> Optional[str]:
@@ -67,6 +70,14 @@ def is_pieces_opened(func):
 		if Settings.is_loaded:
 			return func(*args, **kwargs)
 		else:
-			return Settings.nvim.err_write("Please make sure Pieces OS is running and updated\n")
+			# Run the health request to check if the server is running
+			with concurrent.futures.ThreadPoolExecutor() as executor:
+				future = executor.submit(Settings.get_health)
+				health = future.result()
+				if health:
+					BaseWebsocket.start_all()
+					return func(*args,**kwargs)
+				else:
+					return Settings.nvim.err_write("Please make sure Pieces OS is running and updated\n")
 	return wrapper
 
