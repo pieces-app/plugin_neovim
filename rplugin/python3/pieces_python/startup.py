@@ -15,9 +15,9 @@ def statup():
 			Settings.nvim.command('echohl None')
 	except: # Internet issues or status code is not 200
 		pass
-	
 
 	HealthWS(Settings.api_client,on_message,on_startup).start()
+
 def on_message(message):
 	if message == "OK":
 		Settings.is_loaded = True
@@ -25,13 +25,13 @@ def on_message(message):
 		Settings.is_loaded = False
 		Settings.nvim.async_call(Settings.nvim.err_write,"Please make sure Pieces OS is running\n")
 
-def on_startup():
+def on_startup(ws):
 	check,plugin = version_check()
-	AuthWS(Settings.api_client,Auth.on_user_callback)
 	if check:
 		if Settings.load_settings().get("version",__version__) != __version__:
 			Settings.update_settings(version=__version__)
 			Settings.nvim.async_call(Settings.nvim.command,'call PiecesRunRemotePlugins()')
+		AuthWS(Settings.api_client,Auth.on_user_callback)
 		BaseWebsocket.start_all()
 	else:
 		Settings.is_loaded = False
