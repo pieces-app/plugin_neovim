@@ -4,18 +4,12 @@ from .settings import Settings
 from .api import get_version,version_check,is_pieces_opened
 from ._pieces_lib.pieces_os_client.wrapper.basic_identifier import BasicAsset,BasicChat
 from ._pieces_lib.pieces_os_client.wrapper.websockets import *
-from ._pieces_lib.pieces_os_client import (
-	QGPTStreamInput,
-	QGPTQuestionInput,
-	RelevantQGPTSeeds,
-	ConversationMessageApi,
-	ConversationsApi,
-	FragmentMetadata)
+from ._pieces_lib.pieces_os_client import FragmentMetadata
 
 from ._version import __version__
 from .auth import Auth
 from .file_map import file_map
-from .startup import statup
+from .startup import Startup
 from .utils import on_copilot_message
 
 file_map_reverse = {v:k for k,v in file_map.items()}
@@ -33,7 +27,7 @@ class Pieces:
 
 	@pynvim.function("PiecesStartup")
 	def startup(self,args):
-		statup()
+		Startup.startup()
 	
 	@pynvim.function('PiecesCopilotSendQuestion')
 	def send_question(self,args):

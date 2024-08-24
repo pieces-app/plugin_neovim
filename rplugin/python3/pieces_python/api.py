@@ -15,7 +15,7 @@ PIECES_OS_MAX_VERSION = "11.0.0" # Maxium version (11.0.0)
 def get_version() -> Optional[str]:
 	"""Get pieces os version return None if there is a problem"""
 	try:
-		version = pos_client.WellKnownApi(Settings.api_client).get_well_known_version()
+		version = Settings.api_client.well_known_api.get_well_known_version()
 		return version
 	except: # There is a problem in the startup
 		return None
