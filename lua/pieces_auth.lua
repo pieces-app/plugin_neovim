@@ -10,6 +10,7 @@ local function update_content(content,default_hl)
   if not content then
     return
   end
+  vim.api.nvim_buf_set_lines(status_popup.bufnr, 0, -1, false, {}) -- Clear buffer
   for i, line in ipairs(content) do
     local hl = line[2] or default_hl
     local text = line[1]
