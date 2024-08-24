@@ -49,7 +49,6 @@ class Startup:
 			AssetsIdentifiersWS(Settings.api_client,cls.update_lua_assets,cls.delete_lua_asset)
 			ConversationWS(Settings.api_client,cls.update_lua_conversations,cls.delete_lua_conversation)
 			BaseWebsocket.start_all()
-			Settings.api_client.ensure_initialization()
 		else:
 			Settings.is_loaded = False
 			BaseWebsocket.close_all()
