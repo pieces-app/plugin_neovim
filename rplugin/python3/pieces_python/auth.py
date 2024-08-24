@@ -57,7 +57,7 @@ class Auth:
 	def connect(self):
 		user = self.user_profile
 		if not user:
-			return
+			return Settings.nvim.err_write("You must be logged in to use this feature\n")
 		compact = self.get_compact_dict(user)
 		compact["is_connecting"] = True
 		self.send_lua(compact)
@@ -66,7 +66,9 @@ class Auth:
 			"Failed to connect from the personal cloud")
 
 	def disconnect(self):
-		if self.user_profile and self.user_profile.allocation: # Check if there is an allocation iterable
+		if not self.user_profile:
+			return Settings.nvim.err_write("You must be logged in to use this feature\n")
+		if self.user_profile.allocation: # Check if there is an allocation iterable
 			t = Settings.api_client.allocations_api.allocations_disconnect_cloud(self.user_profile.allocation,async_req=True)
 			self.print_info(t,"Disconnected from the personal cloud successfully","Failed to disconnect from the personal cloud")
 	
