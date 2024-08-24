@@ -1,19 +1,23 @@
 import pynvim
+
 from .settings import Settings
 from .api import get_version,version_check,is_pieces_opened
-from .websockets import ask_stream_ws,base_websocket
-from ._pieces_lib.pieces_os_client import (QGPTStreamInput,
-											QGPTQuestionInput,
-											RelevantQGPTSeeds,
-											ConversationMessageApi,
-											ConversationsApi,
-											FragmentMetadata)
-from .streamed_identifiers.assets_snapshot import AssetSnapshot
-from .websockets.health_ws import HealthWS
+from ._pieces_lib.pieces_os_client.wrapper.basic_identifier import BasicAsset,BasicChat
+from ._pieces_lib.pieces_os_client.wrapper.websockets import *
+from ._pieces_lib.pieces_os_client import (
+	QGPTStreamInput,
+	QGPTQuestionInput,
+	RelevantQGPTSeeds,
+	ConversationMessageApi,
+	ConversationsApi,
+	FragmentMetadata)
+
 from ._version import __version__
 from .auth import Auth
 from .file_map import file_map
-import semver
+from .startup import statup
+from .utils import on_copilot_message
+
 file_map_reverse = {v:k for k,v in file_map.items()}
 
 
@@ -24,24 +28,16 @@ class Pieces:
 		self.nvim = nvim
 		Settings.nvim = nvim
 		Settings.load_config()
-		self.api_client = Settings.api_client # Load any host stuff 
+		self.api_client = Settings.api_client
+		self.auth = Auth()
 
 	@pynvim.function("PiecesStartup")
 	def startup(self,args):
 		statup()
 	
-	@pynvim.function('PiecesCopilotSendQuestion',sync=True)
+	@pynvim.function('PiecesCopilotSendQuestion')
 	def send_question(self,args):
-		query = args[0]
-		ask_stream_ws.send_message(QGPTStreamInput(
-			question=QGPTQuestionInput(
-				relevant=RelevantQGPTSeeds(iterable=[]),
-				query=query,
-				application=Settings.get_application().id,
-				model = Settings.model_id
-			),
-			conversation = ask_stream_ws.conversation_id,
-		))
+		Settings.copilot.stream_question(args[0],on_copilot_message)
 
 	@pynvim.function('PiecesEditAsset')
 	def edit_asset(self,args):
