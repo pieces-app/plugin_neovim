@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Generator
+from typing import TYPE_CHECKING, Optional, Callable
 from pieces_python._pieces_lib.pieces_os_client import (SeededConversation,
     QGPTStreamInput,
     RelevantQGPTSeeds,
@@ -13,7 +13,6 @@ from .basic_identifier.chat import BasicChat
 from .streamed_identifiers.conversations_snapshot import ConversationsSnapshot
 from .websockets import AskStreamWS
 import queue
-
 
 if TYPE_CHECKING:
     from .client import PiecesClient
@@ -39,8 +38,9 @@ class Copilot:
 
     def stream_question(self,
             query: str,
-            pipeline: Optional[QGPTPromptPipeline] = None
-            ) -> Generator[QGPTStreamOutput, None, None]:
+            on_message:Callable,
+            pipeline: Optional[QGPTPromptPipeline] = None,
+            ):
         """
         Asks a question to the QGPT model and streams the responses.
         by default it will create a new conversation and always use it in the ask.
@@ -55,6 +55,7 @@ class Copilot:
         """
         id = self._chat.id if self._chat else None
         relevant = self.context._relevance_api(query) if self.context._check_relevant_existance else RelevantQGPTSeeds(iterable=[])
+        self.ask_stream_ws.on_message_callback = on_message
         self.ask_stream_ws.send_message(
             QGPTStreamInput(
                 question=QGPTQuestionInput(
@@ -67,14 +68,6 @@ class Copilot:
                 conversation=id,
             )
         )
-
-        while True:
-            message: QGPTStreamOutput = self._on_message_queue.get()
-            if message.status != QGPTStreamEnum.IN_MINUS_PROGRESS:  # Loop only while in progress
-                yield message
-                self.chat = BasicChat(message.conversation)  # Save the conversation
-                break
-            yield message
 
 
     def question(self,
