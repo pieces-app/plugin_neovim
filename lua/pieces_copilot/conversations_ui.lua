@@ -4,10 +4,52 @@ local copilot_module = require('pieces_copilot')
 local M = {}
 local current_index = 1
 local conversations = conversations_module.conversations
+local results_popup
+
+local function update_list()
+	if not vim.api.nvim_buf_is_valid(results_popup.bufnr) then
+		return
+	end
+    local lines = {}
+    local end_col, start_col, annotation_index
+
+    for i, conversation in ipairs(conversations) do
+        local base_name = conversation.name:gsub("\n", "\\n")
+        if i == current_index then
+            local highlighted_line = "> " .. base_name .. " "
+            start_col = #highlighted_line
+            highlighted_line = highlighted_line .. conversation.annotation
+            end_col = start_col + #conversation.annotation
+            annotation_index = i - 1 -- Convert to 0-based index for highlighting
+            table.insert(lines, highlighted_line)
+        else
+            table.insert(lines, " " .. base_name)
+        end
+    end
+
+    vim.api.nvim_buf_set_lines(results_popup.bufnr, 0, -1, false, lines)
+
+    -- Apply the highlight if annotation_index is valid
+    if annotation_index then
+        vim.api.nvim_buf_add_highlight(results_popup.bufnr, -1, "PiecesAnnotation", annotation_index, start_col, end_col)
+    end
+
+    local win_height = vim.api.nvim_win_get_height(results_popup.winid) - 5 -- Removing the borders
+    local cursor_line = current_index - 1 -- Convert to 0-based index for nvim_win_set_cursor
+    if cursor_line >= win_height or cursor_line - win_height < 0 then
+        vim.api.nvim_win_set_cursor(results_popup.winid, { current_index, 0 })
+    end
+end
+function M.update()
+	if results_popup then
+		update_list()
+	end
+end
+
 
 function M.setup()
 	-- Create the results popup
-	local results_popup = Popup({
+	results_popup = Popup({
 		relative = "editor",
 		position = "50%",
 		size = {
@@ -26,53 +68,18 @@ function M.setup()
 		},
 	})
 
-	function M.update_list()
-		if not vim.api.nvim_buf_is_valid(results_popup.bufnr) then
-			return
-		end
-	    local lines = {}
-	    local end_col, start_col, annotation_index
-
-	    for i, conversation in ipairs(conversations) do
-	        local base_name = conversation.name:gsub("\n", "\\n")
-	        if i == current_index then
-	            local highlighted_line = "> " .. base_name .. " "
-	            start_col = #highlighted_line
-	            highlighted_line = highlighted_line .. conversation.annotation
-	            end_col = start_col + #conversation.annotation
-	            annotation_index = i - 1 -- Convert to 0-based index for highlighting
-	            table.insert(lines, highlighted_line)
-	        else
-	            table.insert(lines, " " .. base_name)
-	        end
-	    end
-
-	    vim.api.nvim_buf_set_lines(results_popup.bufnr, 0, -1, false, lines)
-
-	    -- Apply the highlight if annotation_index is valid
-	    if annotation_index then
-	        vim.api.nvim_buf_add_highlight(results_popup.bufnr, -1, "PiecesAnnotation", annotation_index, start_col, end_col)
-	    end
-
-	    local win_height = vim.api.nvim_win_get_height(results_popup.winid) - 5 -- Removing the borders
-	    local cursor_line = current_index - 1 -- Convert to 0-based index for nvim_win_set_cursor
-	    if cursor_line >= win_height or cursor_line - win_height < 0 then
-	        vim.api.nvim_win_set_cursor(results_popup.winid, { current_index, 0 })
-	    end
-	end
-
 
 	local function down_keymap()
 		if current_index < #conversations then
 			current_index = current_index + 1
-			M.update_list()
+			update_list()
 		end
 	end
 
 	local function up_keymap()
 		if current_index > 1 then
 			current_index = current_index - 1
-			M.update_list()
+			update_list()
 		end
 	end
 	local function enter_keymap()
@@ -98,7 +105,6 @@ function M.setup()
 	end
 	local function delete_keymap()
 		conversations_module.delete(conversations[current_index].id)
-		M.update_list()
 	end
 	-- Key mappings for navigation
 	local keymaps = {
@@ -122,7 +128,7 @@ function M.setup()
 
 	-- Mount the layout
 	results_popup:mount()
-	M.update_list()
+	update_list()
 
 	vim.api.nvim_set_current_win(results_popup.winid)
 

@@ -49,6 +49,7 @@ class Startup:
 			AssetsIdentifiersWS(Settings.api_client,cls.update_lua_assets,cls.delete_lua_asset)
 			# ConversationWS(Settings.api_client,cls.update_lua_conversations,cls.delete_lua_conversation)
 			BaseWebsocket.start_all()
+			Settings.api_client.ensure_initialization()
 		else:
 			Settings.is_loaded = False
 			BaseWebsocket.close_all()
@@ -58,8 +59,8 @@ class Startup:
 	def on_close(ws):
 		Settings.is_loaded = False
 
-	@staticmethod
-	def update_lua_assets(asset:Asset):
+	@classmethod
+	def update_lua_assets(cls,asset:Asset):
 		asset_wrapper = BasicAsset(asset.id)
 
 		lang = asset_wrapper.classification
@@ -77,9 +78,10 @@ class Startup:
 				}},{str(not AssetSnapshot.first_shot).lower()})
 		"""
 		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
+		cls.update_list("pieces_assets.ui") # Update the list
 	
-	@staticmethod
-	def update_lua_conversations(conversation:Conversation):
+	@classmethod
+	def update_lua_conversations(cls,conversation:Conversation):
 		m = "{" + ", ".join(f"['{k}']='{v}'" for k, v in conversation.messages.indices.items()) + "}"
 		wrapper = BasicChat(conversation.id)
 		
@@ -94,14 +96,21 @@ class Startup:
 		"""
 
 		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
+		cls.update_list('pieces_copilot.conversations_ui')
 
-	@staticmethod
-	def delete_lua_asset(asset):
+	@classmethod
+	def delete_lua_asset(cls,asset):
 		lua = f"""require("pieces_assets.assets").remove_snippet('{asset.id}')"""
 		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
+		cls.update_list("pieces_assets.ui") # Update the list
 
-	@staticmethod
-	def delete_lua_conversation(conversation):
+	@classmethod
+	def delete_lua_conversation(cls,conversation):
 		lua = f"""require("pieces_copilot.conversations").remove_conversation('{conversation.id}')"""
 		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
+		cls.update_list('pieces_copilot.conversations_ui')
+
+	@staticmethod
+	def update_list(module):
+		Settings.nvim.async_call(Settings.nvim.exec_lua,f"require('{module}').update()")
 

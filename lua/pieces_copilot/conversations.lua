@@ -1,4 +1,3 @@
-local update_list = require("pieces_copilot.conversations_ui").update_list
 local M = {}
 
 M.conversations = {}
@@ -23,7 +22,6 @@ function M.append_conversations(conversation, sort)
             return a.updated > b.updated
         end)
     end
-    update_list()
 end
 
 
@@ -38,7 +36,6 @@ function M.remove_conversation(conversation_id)
             return
         end
     end
-    update_list()
 end
 
 return M
