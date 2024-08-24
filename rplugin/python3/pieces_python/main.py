@@ -42,17 +42,17 @@ class Pieces:
 	@pynvim.function('PiecesEditAsset')
 	def edit_asset(self,args):
 		asset_id,data = args
-		AssetSnapshot(asset_id).edit_asset_original_format(data)
+		BasicAsset(asset_id).raw_content = data
 
 	@pynvim.function('PiecesDeleteAsset')
 	def delete_asset(self,args):
 		asset_id = args[0]
-		AssetSnapshot(asset_id).delete()
+		BasicAsset(asset_id).delete()
 
 	@pynvim.function('PiecesGetMessage',sync=True)
 	def get_message(self,args):
 		message_id = args[0]
-		message = ConversationMessageApi(Settings.api_client).message_specific_message_snapshot(message=message_id,transferables=True)
+		message = Settings.api_client.conversation_message_api.message_specific_message_snapshot(message=message_id,transferables=True)
 		return f"{{role = '{message.role.value}', raw = [=[{message.fragment.string.raw}]=]}}"
 
 	@pynvim.function("PiecesGetModel",sync=True)
@@ -64,37 +64,40 @@ class Pieces:
 	def create_asset(self,args): 
 		try: metadata = FragmentMetadata(ext=file_map_reverse.get(self.nvim.api.buf_get_option(0, 'filetype')))
 		except: metadata = None
-		AssetSnapshot.create(args[0], metadata)
+		BasicAsset.create(args[0], metadata)
 		self.nvim.out_write("Snippet created successfully\n")
 
 	@pynvim.function("PiecesGetModels",sync=True)
 	def get_models(self,args):
-		return"{" + ", ".join(f'"{value}"' for value in Settings.get_models_ids().keys()) + "}"
+		return"{" + ", ".join(f'"{value}"' for value in Settings.models.keys()) + "}"
 
 	@pynvim.function("PiecesChangeModel",sync=True)
 	def change_model(self,args):
 		model_name = args[0]
-		if model_name in Settings.get_models_ids().keys():
-			Settings.model_name = model_name
+		if model_name in self.api_client.available_models_names:
+			Settings.api_client.model_name = model_name
 			return f"Set the current LLM model to {model_name} successfully"
 		return "Invalid Model name"
 
 	@pynvim.function("PiecesSetConversation")
 	def set_conversation(self,args):
-		ask_stream_ws.conversation_id = args[0]
+		if args:
+			conversation = BasicChat(args[0])
+		else:
+			conversation = None
+		Settings.copilot.chat = conversation
 
 	@pynvim.function("PiecesDeleteConversation")
 	def delete_conversation(self,args):
-		ConversationsApi(self.api_client).conversations_delete_specific_conversation(args[0])
+		BasicChat(args[0]).delete()
 
 	@pynvim.function("PiecesVersionCheck", sync=True)
 	def version_check(self,args):
 		return version_check()[0]
+
 	@pynvim.function("PiecesLogin", sync=True)
 	def login_function(self,args):
-		"""
-			first args if true it will show the ui
-		"""
+		"""first args if true it will show the ui"""
 		if args:
 			self.auth.login(args[0])
 
