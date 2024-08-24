@@ -1,6 +1,5 @@
 from pieces_python._pieces_lib.pieces_os_client import (
     ApiClient,
-    Application,
     Configuration,
     ConversationApi,
     ConversationMessageApi,
@@ -16,7 +15,10 @@ from pieces_python._pieces_lib.pieces_os_client import (
     AssetsApi,
     FragmentMetadata,
     ModelsApi,
-    AnnotationApi
+    AnnotationApi,
+    WellKnownApi,
+    OSApi,
+    AllocationsApi
 )
 from typing import Optional,Dict
 import platform
@@ -55,6 +57,9 @@ class PiecesClient:
         self.connector_api = ConnectorApi(self.api_client)
         self.models_api = ModelsApi(self.api_client)
         self.annotation_api = AnnotationApi(self.api_client)
+        self.well_known_api = WellKnownApi(self.api_client)
+        self.os_api = OSApi(self.api_client)
+        self.allocations_api = AllocationsApi(self.api_client)
 
         # Websocket urls
         if 'http' not in self.host:
