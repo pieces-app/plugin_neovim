@@ -39,7 +39,7 @@ end
 
 -- Function to update the list popup
 local function update_list()
-	if not vim.api.nvim_buf_is_valid(results_popup.bufnr) then
+	if not results_popup or not vim.api.nvim_buf_is_valid(results_popup.bufnr) then
 		return
 	end
     local lines = {}

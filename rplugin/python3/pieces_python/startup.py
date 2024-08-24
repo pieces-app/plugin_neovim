@@ -82,14 +82,16 @@ class Startup:
 	@classmethod
 	def update_lua_conversations(cls,conversation:Conversation):
 		m = "{" + ", ".join(f"['{k}']='{v}'" for k, v in conversation.messages.indices.items()) + "}"
-		wrapper = BasicChat(conversation.id)
-		
+		annotation = " "
+		annotations = conversation.annotations
+		if annotations and annotations.indices:
+			annotation = Settings.api_client.annotation_api.annotation_specific_annotation_snapshot(list(annotations.indices.keys())[0]).text.replace("\n"," ")
 		lua = f"""
 		require("pieces.copilot.conversations").append_conversations({{
 					name = [=[{conversation.name}]=],
 					id = "{conversation.id}",
 					messages = {m},
-					annotation = [=[{wrapper.description}]=],
+					annotation = [=[{annotation}]=],
 					update={int(conversation.created.value.timestamp())},
 				}},{str(not ConversationsSnapshot.first_shot).lower()})
 		"""
