@@ -1,8 +1,8 @@
-from ._pieces_lib import pieces_os_client as pos_client
-from typing import Dict
-import pynvim
-from ._version import __version__
 from ._pieces_lib.platformdirs import user_data_dir
+from ._pieces_lib.pieces_os_client.wrapper import PiecesClient
+from ._pieces_lib.pieces_os_client import SeededConnectorConnection,SeededTrackedApplication
+from ._version import __version__
+import pynvim
 from pathlib import Path
 import json
 import urllib.request
@@ -20,29 +20,19 @@ class Settings:
 	host = ""
 	_api_client = None
 	is_loaded = False
+	os:str
 	pieces_data_dir = user_data_dir(appauthor="pieces", appname="neovim",ensure_exists=True)
 	settings_file = Path(pieces_data_dir, "settings.json")
 
 	@classproperty
 	def model_name(cls):
-		if not hasattr(cls,"_model_name"):
-			cls._model_name = cls.load_settings().get("model_name","GPT-4o Chat Model")
-		return cls._model_name
+		return cls.api_client.model_name
 
 	@model_name.setter
 	def model_name(cls,value):
-		cls.update_settings(model_name=value)
-		cls._model_name = value
-
-	@classproperty
-	def model_id(cls):
-		return cls.get_models_ids()[cls.model_name]
-
-	@classproperty
-	def api_client(cls):
-		if cls._api_client: return cls._api_client
-		cls._api_client = cls._get_api_client()
-		return cls._api_client
+		if value in cls.api_client.available_models_names:
+			cls.api_client.model_name = value
+			cls.update_settings(model_name=value)
 	
 	@classmethod
 	def get_health(cls):
@@ -53,38 +43,11 @@ class Settings:
 		bool: True if the health status is 'ok', False otherwise.
 		"""
 		try:
-			health = pos_client.WellKnownApi(cls.api_client).get_well_known_health()
+			health = cls.api_client.well_known_api.get_well_known_health()
 			return health == "ok"
 		except:
 			return False
 
-	@classmethod
-	def get_application(cls)-> pos_client.Application:
-		if cls.application:
-			return cls.application
-
-		# Decide if it's Windows, Mac, Linux or Web
-		api_instance = pos_client.ConnectorApi(cls.api_client)
-		seeded_connector_connection = pos_client.SeededConnectorConnection(
-			application=pos_client.SeededTrackedApplication(
-				name = "VIM",
-				platform = cls.os,
-				version = __version__))
-		api_response = api_instance.connect(seeded_connector_connection=seeded_connector_connection)
-		cls.application = api_response.application
-		return cls.application
-
-	@classmethod
-	def get_models_ids(cls) -> Dict[str, str]:
-		if cls.models:
-			return cls.models
-
-		api_instance = pos_client.ModelsApi(cls.api_client)
-
-		api_response = api_instance.models_snapshot()
-		cls.models = {model.name: model.id for model in api_response.iterable if model.cloud or model.downloaded} # getting the models that are available in the cloud or is downloaded
-
-		return cls.models
 
 	@classmethod
 	def load_config(cls) -> None:
@@ -100,36 +63,30 @@ class Settings:
 
 			setattr(cls,config,out)
 
-
-	@classmethod
-	def _get_api_client(cls):
 		if not cls.host:
 			if 'linux' == cls.os:
 				cls.host = "http://127.0.0.1:5323"
 			else:
 				cls.host = "http://127.0.0.1:1000"
+		cls.api_client = PiecesClient(cls.host,
+			seeded_connector=SeededConnectorConnection(
+				application=SeededTrackedApplication(
+					name = "VIM",
+					platform = cls.os,
+					version = __version__)))
+		cls.models = cls.api_client.get_models()
+		cls.copilot = cls.api_client.copilot
+		cls.api_client.model_name = cls.load_settings().get("model_name","GPT-4o Chat Model")
 
-		# Websocket urls
-		ws_base_url = cls.host.replace('http','ws')
-		cls.ASSETS_IDENTIFIERS_WS_URL = ws_base_url + "/assets/stream/identifiers"
-		cls.AUTH_WS_URL = ws_base_url + "/user/stream"
-		cls.ASK_STREAM_WS_URL = ws_base_url + "/qgpt/stream"
-		cls.CONVERSATION_WS_URL = ws_base_url + "/conversations/stream/identifiers"
-		cls.HEALTH_WS_URL = ws_base_url + "/.well-known/stream/health"
-
-		configuration = pos_client.Configuration(host=cls.host)
-
-		cls.api_client = pos_client.ApiClient(configuration)
-		return cls.api_client
 
 	@classmethod
 	def load_settings(cls):
-		with open(cls.settings_file, 'r') as file:
-			try:
+		try:
+			with open(cls.settings_file, 'r') as file:
 				data = json.load(file)
 				return data
-			except json.JSONDecodeError:
-				return {}
+		except (json.JSONDecodeError,FileNotFoundError):
+			return {}
 
 	@classmethod
 	def update_settings(cls,**kwargs):
@@ -148,5 +105,4 @@ class Settings:
 
 				if tags:
 					return tags[0]['name']
-
 
