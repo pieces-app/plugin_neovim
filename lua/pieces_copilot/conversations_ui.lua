@@ -26,7 +26,10 @@ function M.setup()
 		},
 	})
 
-	local function update_list()
+	function M.update_list()
+		if not vim.api.nvim_buf_is_valid(results_popup.bufnr) then
+			return
+		end
 	    local lines = {}
 	    local end_col, start_col, annotation_index
 
@@ -62,14 +65,14 @@ function M.setup()
 	local function down_keymap()
 		if current_index < #conversations then
 			current_index = current_index + 1
-			update_list()
+			M.update_list()
 		end
 	end
 
 	local function up_keymap()
 		if current_index > 1 then
 			current_index = current_index - 1
-			update_list()
+			M.update_list()
 		end
 	end
 	local function enter_keymap()
@@ -95,7 +98,7 @@ function M.setup()
 	end
 	local function delete_keymap()
 		conversations_module.delete(conversations[current_index].id)
-		update_list()
+		M.update_list()
 	end
 	-- Key mappings for navigation
 	local keymaps = {
@@ -119,7 +122,7 @@ function M.setup()
 
 	-- Mount the layout
 	results_popup:mount()
-	update_list()
+	M.update_list()
 
 	vim.api.nvim_set_current_win(results_popup.winid)
 

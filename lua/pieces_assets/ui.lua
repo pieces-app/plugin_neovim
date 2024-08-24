@@ -91,6 +91,9 @@ function M.setup()
 
 	-- Function to update the list popup
 	local function update_list()
+		if not vim.api.nvim_buf_is_valid(results_popup.bufnr) then
+			return
+		end
 	    local lines = {}
 	    local end_col, start_col, annotation_index
 
@@ -129,6 +132,10 @@ function M.setup()
 
 	-- Function to update the preview popup
 	local function update_preview()
+		if not vim.api.nvim_buf_is_valid(preview_popup.bufnr) then
+			return
+		end
+
 		local snippet = snippets_search_results[current_index]
 		-- Split snippet.raw into lines
 		local lines = {}
@@ -186,11 +193,14 @@ function M.setup()
 	end
 
 
+	function M.update()
+		update_list()
+		update_preview()
+	end
 
 	-- Mount the layout
 	layout:mount()
-	update_list()
-	update_preview()
+	M.update()
 
 	vim.api.nvim_set_current_win(input_popup.winid)
 

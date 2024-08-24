@@ -1,5 +1,5 @@
+local update_list = require("pieces_copilot.conversations_ui").update
 local M = {}
-
 
 M.snippets = {}
 
@@ -25,6 +25,7 @@ function M.append_snippets(snippet, first)
 	else
 		table.insert(M.snippets, snippet)
 	end
+	update_list()
 end
 
 
@@ -44,6 +45,7 @@ function M.remove_snippet(snippet_id)
 			return
 		end
 	end
+	update_list()
 end
 
 return M

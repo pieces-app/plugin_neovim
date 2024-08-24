@@ -3,7 +3,13 @@ import semver
 from .auth import Auth
 from ._version import __version__
 from ._pieces_lib.pieces_os_client.wrapper.websockets import *
+from ._pieces_lib.pieces_os_client.wrapper.basic_identifier import BasicAsset,BasicChat
+from ._pieces_lib.pieces_os_client.wrapper.streamed_identifiers import (
+	ConversationsSnapshot,
+	AssetSnapshot)
+from ._pieces_lib.pieces_os_client import Conversation,Asset
 from .api import version_check
+from .file_map import file_map
 
 
 class Startup:
@@ -39,9 +45,58 @@ class Startup:
 				Settings.update_settings(version=__version__)
 				Settings.nvim.async_call(Settings.nvim.command, 'call PiecesRunRemotePlugins()')
 			AuthWS(Settings.api_client, Auth.on_user_callback)
+			AssetsIdentifiersWS(Settings.api_client,cls.update_lua_assets,cls.delete_lua_asset)
+			ConversationWS(Settings.api_client,cls.update_lua_conversations,cls.delete_lua_conversation)
 			BaseWebsocket.start_all()
 		else:
 			Settings.is_loaded = False
 			BaseWebsocket.close_all()
 			Settings.nvim.async_call(Settings.nvim.err_write, f"Please update {plugin}\n")
+
+	@staticmethod
+	def update_lua_assets(asset:Asset):
+		asset_wrapper = BasicAsset(asset.id)
+
+		lang = asset_wrapper.classification
+		if lang: lang = lang.value
+		annotation = asset_wrapper.description
+		if annotation: annotation = annotation.text
+		
+		lua = f"""
+		require("pieces_assets.assets").append_snippets({{
+					name = [=[{asset_wrapper.name}]=],
+					id = "{asset.id}",
+					raw = [=[{asset_wrapper.raw_content}]=],
+					language = "{lang}",
+					filetype = "{file_map.get(lang,"txt")}",
+					annotation = [=[{annotation}]=]
+				}},{str(not AssetSnapshot.first_shot).lower()})
+		"""
+		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
+	@staticmethod
+	def update_lua_conversations(conversation:Conversation):
+		m = "{" + ", ".join(f"['{k}']='{v}'" for k, v in conversation.messages.indices.items()) + "}"
+		wrapper = BasicChat(conversation.id)
+		
+		lua = f"""
+		require("pieces_copilot.conversations").append_conversations({{
+					name = [=[{conversation.name}]=],
+					id = "{conversation.id}",
+					messages = {m},
+					annotation = [=[{wrapper.description}]=],
+					update={conversation.created.value},
+				}},{str(not ConversationsSnapshot.first_shot).lower()})
+		"""
+
+		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
+
+	@staticmethod
+	def delete_lua_asset(asset):
+		lua = f"""require("pieces_assets.assets").remove_snippet('{asset.id}')"""
+		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
+
+	@staticmethod
+	def delete_lua_conversation(conversation):
+		lua = f"""require("pieces_copilot.conversations").remove_conversation('{conversation.id}')"""
+		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
 

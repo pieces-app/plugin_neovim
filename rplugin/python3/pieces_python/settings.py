@@ -18,7 +18,6 @@ class Settings:
 	application = None
 	models = None
 	host = ""
-	_api_client = None
 	is_loaded = False
 	os:str
 	pieces_data_dir = user_data_dir(appauthor="pieces", appname="neovim",ensure_exists=True)
@@ -68,7 +67,7 @@ class Settings:
 				cls.host = "http://127.0.0.1:5323"
 			else:
 				cls.host = "http://127.0.0.1:1000"
-		cls.api_client = PiecesClient(cls.host,
+		cls.api_client = PiecesClient(cls.host,config={"connect_websockets":False},
 			seeded_connector=SeededConnectorConnection(
 				application=SeededTrackedApplication(
 					name = "VIM",
