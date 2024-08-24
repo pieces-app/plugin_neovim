@@ -166,7 +166,7 @@ class BasicAsset(Basic):
 		self._edit_asset(self.asset)
 
 	@property
-	def description(self):
+	def description(self) -> Optional[str]:
 		"""
 		Retrieve the description of the asset.
 

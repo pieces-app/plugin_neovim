@@ -27,7 +27,7 @@ class Startup:
 		except:  # Internet issues or status code is not 200
 			pass
 
-		HealthWS(Settings.api_client, cls.on_message, cls.on_startup).start()
+		HealthWS(Settings.api_client, cls.on_message, cls.on_startup, cls.on_close).start()
 
 	@classmethod
 	def on_message(cls, message):
@@ -44,14 +44,19 @@ class Startup:
 			if Settings.load_settings().get("version", __version__) != __version__:
 				Settings.update_settings(version=__version__)
 				Settings.nvim.async_call(Settings.nvim.command, 'call PiecesRunRemotePlugins()')
+
 			AuthWS(Settings.api_client, Auth.on_user_callback)
 			AssetsIdentifiersWS(Settings.api_client,cls.update_lua_assets,cls.delete_lua_asset)
-			ConversationWS(Settings.api_client,cls.update_lua_conversations,cls.delete_lua_conversation)
+			# ConversationWS(Settings.api_client,cls.update_lua_conversations,cls.delete_lua_conversation)
 			BaseWebsocket.start_all()
 		else:
 			Settings.is_loaded = False
 			BaseWebsocket.close_all()
 			Settings.nvim.async_call(Settings.nvim.err_write, f"Please update {plugin}\n")
+	
+	@staticmethod
+	def on_close(ws):
+		Settings.is_loaded = False
 
 	@staticmethod
 	def update_lua_assets(asset:Asset):
@@ -59,9 +64,8 @@ class Startup:
 
 		lang = asset_wrapper.classification
 		if lang: lang = lang.value
-		annotation = asset_wrapper.description
-		if annotation: annotation = annotation.text
-		
+		description = asset_wrapper.description
+
 		lua = f"""
 		require("pieces_assets.assets").append_snippets({{
 					name = [=[{asset_wrapper.name}]=],
@@ -69,10 +73,11 @@ class Startup:
 					raw = [=[{asset_wrapper.raw_content}]=],
 					language = "{lang}",
 					filetype = "{file_map.get(lang,"txt")}",
-					annotation = [=[{annotation}]=]
+					annotation = [=[{description}]=]
 				}},{str(not AssetSnapshot.first_shot).lower()})
 		"""
 		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
+	
 	@staticmethod
 	def update_lua_conversations(conversation:Conversation):
 		m = "{" + ", ".join(f"['{k}']='{v}'" for k, v in conversation.messages.indices.items()) + "}"
