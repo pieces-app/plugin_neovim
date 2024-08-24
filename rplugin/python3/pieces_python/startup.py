@@ -47,7 +47,7 @@ class Startup:
 
 			AuthWS(Settings.api_client, Auth.on_user_callback)
 			AssetsIdentifiersWS(Settings.api_client,cls.update_lua_assets,cls.delete_lua_asset)
-			# ConversationWS(Settings.api_client,cls.update_lua_conversations,cls.delete_lua_conversation)
+			ConversationWS(Settings.api_client,cls.update_lua_conversations,cls.delete_lua_conversation)
 			BaseWebsocket.start_all()
 			Settings.api_client.ensure_initialization()
 		else:
@@ -91,7 +91,7 @@ class Startup:
 					id = "{conversation.id}",
 					messages = {m},
 					annotation = [=[{wrapper.description}]=],
-					update={conversation.created.value},
+					update={int(conversation.created.value.timestamp())},
 				}},{str(not ConversationsSnapshot.first_shot).lower()})
 		"""
 
