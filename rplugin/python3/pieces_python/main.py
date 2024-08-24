@@ -136,29 +136,29 @@ class Pieces:
 	@pynvim.command("PiecesSnippets")
 	@is_pieces_opened
 	def open_snippets(self):
-		self.nvim.exec_lua("require('pieces_assets').setup()")
+		self.nvim.exec_lua("require('pieces.assets').setup()")
 
 
 	@pynvim.command("PiecesCopilot")
 	@is_pieces_opened
 	def open_copilot(self):
-		self.nvim.exec_lua("require('pieces_copilot').setup()")
+		self.nvim.exec_lua("require('pieces.copilot').setup()")
 
 	@pynvim.command("PiecesConversations")
 	@is_pieces_opened
 	def open_conversations(self):
-		self.nvim.exec_lua("require('pieces_copilot.conversations_ui').setup()")
+		self.nvim.exec_lua("require('pieces.copilot.conversations_ui').setup()")
 
 
 	@pynvim.command("PiecesAccount")
 	@is_pieces_opened
 	def auth_command(self):
-		self.nvim.exec_lua("require('pieces_auth').setup()")
+		self.nvim.exec_lua("require('pieces.auth').setup()")
 
 	@pynvim.command('PiecesCreateSnippet', range='', nargs='*')
 	@is_pieces_opened
 	def pieces_create_snippet(self, args, range):
 		line1 = range[0]
 		line2 = range[1]
-		self.nvim.command(f'call luaeval("require(\'pieces_assets.create\').setup({line1}, {line2})")')
+		self.nvim.exec_lua(f"require('pieces.assets.create').setup({line1}, {line2})")
 

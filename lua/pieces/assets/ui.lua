@@ -1,11 +1,11 @@
 local Popup = require('nui.popup')
 local Layout = require('nui.layout')
 local event = require('nui.utils.autocmd').event
-local snippets = require('pieces_assets.assets')
+local snippets = require('pieces.assets.assets')
 local icons = require('nvim-web-devicons')
-local edit_asset = require('pieces_assets.edit').edit_asset
-local delete_asset = require('pieces_assets.edit').delete_asset
-local make_buffer_read_only = require("pieces_utils").make_buffer_read_only
+local edit_asset = require('pieces.assets.edit').edit_asset
+local delete_asset = require('pieces.assets.edit').delete_asset
+local make_buffer_read_only = require("pieces.utils").make_buffer_read_only
 local results_popup,preview_popup,input_popup
 local M = {}
 local current_index = 1

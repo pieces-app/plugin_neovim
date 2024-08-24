@@ -60,7 +60,7 @@ Install the plugins by running `:PackerSync` in Neovim.
 After installing the plugin, you can configure the host by adding the following lines to your `init.vim` or `init.lua`:
 
 ```lua
-require("pieces_config").host = "http://localhost:1000"
+require("pieces.config").host = "http://localhost:1000"
 ```
 
 By default the host will be http://localhost:1000 on Windows and MacOS and http://localhost:5323 on Linux

@@ -34,12 +34,12 @@ def on_copilot_message(message):
 
 		for answer in answers:
 			Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
-				require("pieces_copilot").append_to_chat([=[{answer.text}]=],"ASSISTANT")
+				require("pieces.copilot").append_to_chat([=[{answer.text}]=],"ASSISTANT")
 			""")
 	
 	if message.status == "COMPLETED":
 		Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
-			require("pieces_copilot").completed(True)
+			require("pieces.copilot").completed(True)
 		""")
 		Settings.copilot.chat = BasicChat(message.conversation)
 	elif message.status == "FAILED":

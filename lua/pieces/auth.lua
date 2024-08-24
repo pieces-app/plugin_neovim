@@ -1,7 +1,7 @@
 local M = {}
 local NuiPopup  = require('nui.popup')
 local user = nil
-local make_buffer_read_only = require("pieces_utils").make_buffer_read_only
+local make_buffer_read_only = require("pieces.utils").make_buffer_read_only
 local status_popup
 
 local function update_content(content,default_hl)

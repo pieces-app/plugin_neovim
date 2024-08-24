@@ -1,5 +1,5 @@
-local copilot_ui         = require("pieces_copilot.copilot_ui")
-local slash_commands     = require("pieces_copilot.slash_commands")
+local copilot_ui         = require("pieces.copilot.copilot_ui")
+local slash_commands     = require("pieces.copilot.slash_commands")
 
 local create_input_popup = copilot_ui.create_input_popup
 local create_chat_popup  = copilot_ui.create_chat_popup

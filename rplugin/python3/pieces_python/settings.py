@@ -55,7 +55,7 @@ class Settings:
 		"""
 		for config in ["os",'host']:
 			lua_code = f"""
-			local config = require('pieces_config')
+			local config = require('pieces.config')
 			return config.{config}
 			"""
 			out = cls.nvim.exec_lua(lua_code)

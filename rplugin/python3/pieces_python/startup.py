@@ -67,7 +67,7 @@ class Startup:
 		description = asset_wrapper.description
 
 		lua = f"""
-		require("pieces_assets.assets").append_snippets({{
+		require("pieces.assets.assets").append_snippets({{
 					name = [=[{asset_wrapper.name}]=],
 					id = "{asset.id}",
 					raw = [=[{asset_wrapper.raw_content}]=],
@@ -77,7 +77,7 @@ class Startup:
 				}},{str(not AssetSnapshot.first_shot).lower()})
 		"""
 		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
-		cls.update_list("pieces_assets.ui") # Update the list
+		cls.update_list("pieces.assets.ui") # Update the list
 	
 	@classmethod
 	def update_lua_conversations(cls,conversation:Conversation):
@@ -85,7 +85,7 @@ class Startup:
 		wrapper = BasicChat(conversation.id)
 		
 		lua = f"""
-		require("pieces_copilot.conversations").append_conversations({{
+		require("pieces.copilot.conversations").append_conversations({{
 					name = [=[{conversation.name}]=],
 					id = "{conversation.id}",
 					messages = {m},
@@ -95,19 +95,19 @@ class Startup:
 		"""
 
 		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
-		cls.update_list('pieces_copilot.conversations_ui')
+		cls.update_list('pieces.copilot.conversations_ui')
 
 	@classmethod
 	def delete_lua_asset(cls,asset):
-		lua = f"""require("pieces_assets.assets").remove_snippet('{asset.id}')"""
+		lua = f"""require("pieces.assets.assets").remove_snippet('{asset.id}')"""
 		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
-		cls.update_list("pieces_assets.ui") # Update the list
+		cls.update_list("pieces.assets.ui") # Update the list
 
 	@classmethod
 	def delete_lua_conversation(cls,conversation):
-		lua = f"""require("pieces_copilot.conversations").remove_conversation('{conversation.id}')"""
+		lua = f"""require("pieces.pieces_copilot.conversations").remove_conversation('{conversation.id}')"""
 		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
-		cls.update_list('pieces_copilot.conversations_ui')
+		cls.update_list('pieces.copilot.conversations_ui')
 
 	@staticmethod
 	def update_list(module):

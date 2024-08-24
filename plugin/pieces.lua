@@ -1,3 +1,3 @@
-require("pieces_copilot")
-require("pieces_assets")
-require("pieces_copilot.slash_commands")
+require("pieces.copilot")
+require("pieces.assets")
+require("pieces.copilot.slash_commands")

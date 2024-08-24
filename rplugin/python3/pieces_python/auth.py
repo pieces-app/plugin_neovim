@@ -21,7 +21,7 @@ class Auth:
 		lua_str = "nil"
 		if python_dict:
 			lua_str = convert_to_lua_table(python_dict)
-		Settings.nvim.async_call(Settings.nvim.exec_lua,f"require('pieces_auth').update_user({lua_str})")
+		Settings.nvim.async_call(Settings.nvim.exec_lua,f"require('pieces.auth').update_user({lua_str})")
 
 	@staticmethod
 	def get_compact_dict(user):

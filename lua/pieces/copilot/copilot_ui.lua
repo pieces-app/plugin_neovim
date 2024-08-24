@@ -1,7 +1,7 @@
 local NuiPopup  = require('nui.popup')
 local NuiLayout = require('nui.layout')
 local NuiSplit  = require('nui.split')
-local make_buffer_read_only = require("pieces_utils").make_buffer_read_only
+local make_buffer_read_only = require("pieces.utils").make_buffer_read_only
 local layout
 
 local function create_chat_popup()
