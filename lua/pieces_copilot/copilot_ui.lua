@@ -58,6 +58,7 @@ local function create_input_popup(on_submit)
 		prompt = prompt,
 		on_close = function()
 			layout:unmount()
+			vim.fn.PiecesSetConversation()
 		end,
 
 	})
