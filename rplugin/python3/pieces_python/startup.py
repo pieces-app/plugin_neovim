@@ -93,7 +93,7 @@ class Startup:
 					messages = {m},
 					annotation = [=[{annotation}]=],
 					update={int(conversation.created.value.timestamp())},
-				}},{str(not ConversationsSnapshot.first_shot).lower()})
+				}},{str(ConversationsSnapshot.first_shot).lower()})
 		"""
 
 		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)

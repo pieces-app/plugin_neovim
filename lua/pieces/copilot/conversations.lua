@@ -9,7 +9,7 @@ function M.append_conversations(conversation, sort)
             M.conversations[i] = conversation
             if sort then
                 table.sort(M.conversations, function(a, b)
-                    return a.updated > b.updated
+                    return a.update > b.update
                 end)
             end
             return
@@ -19,7 +19,7 @@ function M.append_conversations(conversation, sort)
     table.insert(M.conversations, conversation)
     if sort then
         table.sort(M.conversations, function(a, b)
-            return a.updated > b.updated
+            return a.update > b.update
         end)
     end
 end

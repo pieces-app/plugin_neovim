@@ -31,7 +31,8 @@ class Pieces:
 	
 	@pynvim.function('PiecesCopilotSendQuestion')
 	def send_question(self,args):
-		Settings.copilot.stream_question(args[0],on_copilot_message)
+		if args[0].strip():
+			Settings.copilot.stream_question(args[0],on_copilot_message)
 
 	@pynvim.function('PiecesEditAsset')
 	def edit_asset(self,args):

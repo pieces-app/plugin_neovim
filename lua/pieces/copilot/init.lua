@@ -7,12 +7,6 @@ local get_layout  = copilot_ui.layout
 
 local input_popup, layout, chat_popup, previous_role, whole_text,completed,current_line
 
-local function set_statusline()
-	local buf = vim.api.nvim_get_current_buf()
-	if buf == input_popup.bufnr or buf == chat_popup.bufnr then
-	    vim.wo.statusline = vim.fn.PiecesGetModel()
-	end
-end
 
 local function append_to_chat(character, role)
 	local bufnr = chat_popup.bufnr
@@ -53,6 +47,11 @@ local function append_to_chat(character, role)
 
 	-- Set the lines in the buffer
 	vim.api.nvim_buf_set_lines(bufnr, current_line, -1, false, whole_text)
+
+
+	local line_count = vim.api.nvim_buf_line_count(bufnr)
+    vim.api.nvim_win_set_cursor(chat_popup.winid, {line_count, 0})
+    print(line_count,current_line)
 end
 
 
@@ -62,14 +61,13 @@ local function setup()
 		layout:unmount()
 	end
 	chat_popup = create_chat_popup()
-
+	vim.fn.PiecesSetConversation()
 	local function on_submit(value)
-		set_statusline()
 		local has_non_space_string = false
 		local content = ""
 		for _, v in ipairs(value) do
-			content = content .. "\n" .. v
 			if v:match("%S") then
+				content = content .. "\n" .. v
 				has_non_space_string = true
 			end
 		end
@@ -77,6 +75,7 @@ local function setup()
 		if not has_non_space_string and completed == true then
 			return
 		end
+
 		vim.api.nvim_buf_set_lines(input_popup.bufnr, 0, -1, false, { "" })
 		local slash = slash_commands.handle_slash(value[1])
 		if slash==false then
@@ -94,21 +93,13 @@ local function setup()
 
 	layout = get_layout(chat_popup,input_popup)
 	layout:mount()
-
-	-- Create an autocommand to set the statusline whenever a buffer is entered
-	vim.api.nvim_create_autocmd({"BufEnter","BufWinEnter","ModeChanged" } , {
-	    pattern = "*",
-	    callback = set_statusline,
-	})
-
+	vim.api.nvim_win_set_option(layout.winid, 'statusline', 'Model: '.. vim.fn.PiecesGetModel())
 	vim.api.nvim_set_current_win(input_popup.winid)
 	slash_commands.setup_buffer(vim.api.nvim_get_current_buf())
-	set_statusline()
 end
 
 return {
 	setup = setup,
 	append_to_chat = append_to_chat,
-	completed = function(value) completed = value end,
-	set_statusline=set_statusline
+	completed = function(value) completed = value end
 }
