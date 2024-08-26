@@ -1,5 +1,5 @@
 from .settings import Settings
-import semver
+from ._pieces_lib import semver
 from .auth import Auth
 from ._version import __version__
 from ._pieces_lib.pieces_os_client.wrapper.websockets import *
