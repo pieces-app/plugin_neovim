@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from . import PlatformDirs, __version__
+from pieces_python._pieces_lib.platformdirs import PlatformDirs, __version__
 
 PROPS = (
     "user_data_dir",

@@ -27,7 +27,7 @@ from typing import (  # type: ignore
     get_type_hints,
 )
 
-from typing_extensions import (
+from pieces_python._pieces_lib.typing_extensions import (
     Annotated,
     Final,
     Literal,
@@ -192,7 +192,7 @@ if sys.version_info < (3, 9):
 else:
     from typing import _UnionGenericAlias  # type: ignore
 
-    from typing_extensions import _AnnotatedAlias
+    from pieces_python._pieces_lib.typing_extensions import _AnnotatedAlias
 
     def convert_generics(tp: Type[Any]) -> Type[Any]:
         """

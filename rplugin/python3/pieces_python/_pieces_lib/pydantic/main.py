@@ -24,7 +24,7 @@ from typing import (
     overload,
 )
 
-from typing_extensions import dataclass_transform
+from pieces_python._pieces_lib.typing_extensions import dataclass_transform
 
 from .class_validators import ValidatorGroup, extract_root_validators, extract_validators, inherit_validators
 from .config import BaseConfig, Extra, inherit_config, prepare_config

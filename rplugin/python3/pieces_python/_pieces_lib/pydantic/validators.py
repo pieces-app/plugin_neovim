@@ -44,7 +44,7 @@ from .typing import (
 from .utils import almost_equal_floats, lenient_issubclass, sequence_like
 
 if TYPE_CHECKING:
-    from typing_extensions import Literal, TypedDict
+    from pieces_python._pieces_lib.typing_extensions import Literal, TypedDict
 
     from .config import BaseConfig
     from .fields import ModelField

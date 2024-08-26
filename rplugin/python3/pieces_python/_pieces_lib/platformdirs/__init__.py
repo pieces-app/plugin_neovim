@@ -22,20 +22,20 @@ if TYPE_CHECKING:
 
 def _set_platform_dir_class() -> type[PlatformDirsABC]:
     if sys.platform == "win32":
-        from platformdirs.windows import Windows as Result  # noqa: PLC0415
+        from pieces_python._pieces_lib.platformdirs.windows import Windows as Result  # noqa: PLC0415
     elif sys.platform == "darwin":
-        from platformdirs.macos import MacOS as Result  # noqa: PLC0415
+        from pieces_python._pieces_lib.platformdirs.macos import MacOS as Result  # noqa: PLC0415
     else:
-        from platformdirs.unix import Unix as Result  # noqa: PLC0415
+        from pieces_python._pieces_lib.platformdirs.unix import Unix as Result  # noqa: PLC0415
 
     if os.getenv("ANDROID_DATA") == "/data" and os.getenv("ANDROID_ROOT") == "/system":
         if os.getenv("SHELL") or os.getenv("PREFIX"):
             return Result
 
-        from platformdirs.android import _android_folder  # noqa: PLC0415
+        from pieces_python._pieces_lib.platformdirs.android import _android_folder  # noqa: PLC0415
 
         if _android_folder() is not None:
-            from platformdirs.android import Android  # noqa: PLC0415
+            from pieces_python._pieces_lib.platformdirs.android import Android  # noqa: PLC0415
 
             return Android  # return to avoid redefinition of a result
 

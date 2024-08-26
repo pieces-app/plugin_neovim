@@ -1,3 +1,6 @@
+from ._pieces_lib.pieces_os_client.wrapper.basic_identifier.chat import BasicChat
+from .settings import Settings
+
 def convert_to_lua_table(python_dict):
     """
     Convert a Python dictionary to a Lua table representation.
@@ -24,3 +27,20 @@ def convert_to_lua_table(python_dict):
         out += f"{lua_key} = {lua_value}, "
     return out.rstrip(', ') + "}"
 
+
+def on_copilot_message(message):
+	if message.question:
+		answers = message.question.answers.iterable
+
+		for answer in answers:
+			Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
+				require("pieces.copilot").append_to_chat([=[{answer.text}]=],"ASSISTANT")
+			""")
+	
+	if message.status == "COMPLETED":
+		Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
+			require("pieces.copilot").completed(True)
+		""")
+		Settings.copilot.chat = BasicChat(message.conversation)
+	elif message.status == "FAILED":
+		return # TODO: Add a better error message
