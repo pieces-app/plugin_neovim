@@ -47,8 +47,10 @@ class Pieces:
 	@pynvim.function('PiecesGetMessage',sync=True)
 	def get_message(self,args):
 		message_id = args[0]
-		message = Settings.api_client.conversation_message_api.message_specific_message_snapshot(message=message_id,transferables=True)
-		return f"{{role = '{message.role.value}', raw = [=[{message.fragment.string.raw}]=]}}"
+		try:
+			message = Settings.api_client.conversation_message_api.message_specific_message_snapshot(message=message_id,transferables=True)
+			return f"{{role = '{message.role.value}', raw = [=[{message.fragment.string.raw}]=]}}"
+		except: pass
 
 	@pynvim.function("PiecesGetModel",sync=True)
 	def get_model(self,args):
@@ -77,7 +79,8 @@ class Pieces:
 	@pynvim.function("PiecesSetConversation")
 	def set_conversation(self,args):
 		if args:
-			conversation = BasicChat(args[0])
+			try: conversation = BasicChat(args[0])
+			except: conversation = None
 		else:
 			conversation = None
 		Settings.copilot.chat = conversation

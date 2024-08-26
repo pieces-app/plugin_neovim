@@ -27,19 +27,21 @@ local function update_list()
             table.insert(lines, " " .. base_name)
         end
     end
+    local success, err = pcall(function()
+	    vim.api.nvim_buf_set_lines(results_popup.bufnr, 0, -1, false, lines)
 
-    vim.api.nvim_buf_set_lines(results_popup.bufnr, 0, -1, false, lines)
+	    -- Apply the highlight if annotation_index is valid
+	    if annotation_index then
+	        vim.api.nvim_buf_add_highlight(results_popup.bufnr, -1, "PiecesAnnotation", annotation_index, start_col, end_col)
+	    end
 
-    -- Apply the highlight if annotation_index is valid
-    if annotation_index then
-        vim.api.nvim_buf_add_highlight(results_popup.bufnr, -1, "PiecesAnnotation", annotation_index, start_col, end_col)
-    end
+	    local win_height = vim.api.nvim_win_get_height(results_popup.winid) - 5 -- Removing the borders
+	    local cursor_line = current_index - 1 -- Convert to 0-based index for nvim_win_set_cursor
+	    if cursor_line >= win_height or cursor_line - win_height < 0 then
+	        vim.api.nvim_win_set_cursor(results_popup.winid, { current_index, 0 })
+	    end
+	end)
 
-    local win_height = vim.api.nvim_win_get_height(results_popup.winid) - 5 -- Removing the borders
-    local cursor_line = current_index - 1 -- Convert to 0-based index for nvim_win_set_cursor
-    if cursor_line >= win_height or cursor_line - win_height < 0 then
-        vim.api.nvim_win_set_cursor(results_popup.winid, { current_index, 0 })
-    end
 end
 function M.update()
 	if results_popup then
@@ -92,6 +94,10 @@ function M.setup()
 			end
 
 			local table_str = vim.fn.PiecesGetMessage(k)
+			if table_str == nil then
+				vim.notify("Not a valid conversation", vim.log.levels.ERROR)
+				break
+			end
 			local func, err = load("return " .. table_str)
 			if not func then
 			    print("Error loading string:", err)
