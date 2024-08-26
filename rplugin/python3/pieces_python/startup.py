@@ -26,8 +26,8 @@ class Startup:
 				Settings.nvim.command('echohl None')
 		except:  # Internet issues or status code is not 200
 			pass
-
-		HealthWS(Settings.api_client, cls.on_message, cls.on_startup, cls.on_close).start()
+		if Settings.get_health():
+			HealthWS(Settings.api_client, cls.on_message, cls.on_startup, cls.on_close).start()
 
 	@classmethod
 	def on_message(cls, message):
@@ -107,7 +107,7 @@ class Startup:
 
 	@classmethod
 	def delete_lua_conversation(cls,conversation):
-		lua = f"""require("pieces.pieces_copilot.conversations").remove_conversation('{conversation.id}')"""
+		lua = f"""require("pieces.copilot.conversations").remove_conversation('{conversation.id}')"""
 		Settings.nvim.async_call(Settings.nvim.exec_lua, lua)
 		cls.update_list('pieces.copilot.conversations_ui')
 

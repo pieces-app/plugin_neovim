@@ -7,9 +7,10 @@ local conversations = conversations_module.conversations
 local results_popup
 
 local function update_list()
-	if not vim.api.nvim_buf_is_valid(results_popup.bufnr) then
+	if results_popup and type(results_popup.bufnr) == "number" and not vim.api.nvim_buf_is_valid(results_popup.bufnr) then
 		return
 	end
+
     local lines = {}
     local end_col, start_col, annotation_index
 
@@ -104,7 +105,10 @@ function M.setup()
 		vim.fn.PiecesSetConversation(conversations[current_index].id)
 	end
 	local function delete_keymap()
-		conversations_module.delete(conversations[current_index].id)
+		local choice = vim.fn.confirm("Are you sure you want to delete '" .. conversations[current_index].name .."'", "&Yes\n&No", 1)
+	    if choice == 1 then
+			conversations_module.delete(conversations[current_index].id)
+		end
 	end
 	-- Key mappings for navigation
 	local keymaps = {
