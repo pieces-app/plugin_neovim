@@ -44,7 +44,7 @@ local function update_list()
 
 end
 function M.update()
-	if results_popup then
+	if results_popup and type(results_popup) == "number" then
 		update_list()
 	end
 end

@@ -98,7 +98,7 @@ local function update_preview()
 end
 
 function M.update()
-	if results_popup and preview_popup then
+	if type(results_popup) == "number" and type(preview_popup) == "number" then
 		update_list()
 		update_preview()
 	end
