@@ -15,11 +15,10 @@ local function append_to_chat(character, role)
 	if role ~= previous_role then
 		current_line = vim.api.nvim_buf_line_count(bufnr)
 		if current_line == 1 then
+		    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, {})
+		else
 		    current_line = current_line + 1
 		    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "" })
-		else
-		    current_line = current_line + 2
-		    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "", "" })
 		end
 
 		previous_role = role
@@ -29,7 +28,6 @@ local function append_to_chat(character, role)
 	if type(character) == "table" then
 		whole_text = character
 		table.insert(whole_text, 1, role .. ": " .. table.remove(whole_text, 1))
-
 	elseif string.find(character, "\n") ~= nil then
 	    local lines = vim.split(character, "\n", true)
 	    for i, line in ipairs(lines) do
@@ -51,7 +49,6 @@ local function append_to_chat(character, role)
 
 	local line_count = vim.api.nvim_buf_line_count(bufnr)
     vim.api.nvim_win_set_cursor(chat_popup.winid, {line_count, 0})
-    print(line_count,current_line)
 end
 
 
@@ -71,16 +68,15 @@ local function setup()
 				has_non_space_string = true
 			end
 		end
-
-		if not has_non_space_string and completed == true then
+		if not has_non_space_string and completed == false then
 			return
 		end
+		completed = false
 
 		vim.api.nvim_buf_set_lines(input_popup.bufnr, 0, -1, false, { "" })
 		local slash = slash_commands.handle_slash(value[1])
 		if slash==false then
 			vim.fn.PiecesCopilotSendQuestion(content)
-			completed = false
 			append_to_chat(value,"USER")
 		else
 			append_to_chat({slash,""},"SYSTEM")

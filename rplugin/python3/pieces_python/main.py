@@ -84,7 +84,10 @@ class Pieces:
 
 	@pynvim.function("PiecesDeleteConversation")
 	def delete_conversation(self,args):
-		BasicChat(args[0]).delete()
+		try:
+			BasicChat(args[0]).delete()
+		except:
+			pass
 
 	@pynvim.function("PiecesVersionCheck", sync=True)
 	def version_check(self,args):
