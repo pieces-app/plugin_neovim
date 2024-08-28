@@ -78,6 +78,8 @@ local function setup()
 		if slash==false then
 			vim.fn.PiecesCopilotSendQuestion(content)
 			append_to_chat(value,"USER")
+		elseif slash == nil then
+			return
 		else
 			append_to_chat({slash,""},"SYSTEM")
 		end

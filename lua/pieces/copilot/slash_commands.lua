@@ -1,3 +1,4 @@
+local context = require("pieces.copilot.context")
 local M = {}
 local commands
 
@@ -26,6 +27,12 @@ local function _commands()
           kind = vim.lsp.protocol.CompletionItemKind.Function,
           args = models_args,
           fn = vim.fn.PiecesChangeModel
+      },
+      ["/context"] = {
+        label = "/context",
+        insertText = "/context",
+        kind = vim.lsp.protocol.CompletionItemKind.Function,
+        fn = context.setup
       }
   }
 end
@@ -117,16 +124,21 @@ setup_source()
 function M.handle_slash(line)
     for command_name, command_list in pairs(commands) do
         if line:sub(1, #command_name) == command_name then
-            -- Extract arguments if any
-            local arg_string = line:sub(#command_name + 2):match("^%s*(.-)%s*$") -- Trim leading/trailing whitespace
+            local args = M.get_args(command_name)
+            if args and #args > 0 then
+                local arg_string = line:sub(#command_name + 2):match("^%s*(.-)%s*$") -- Trim leading/trailing whitespace
 
-            -- Check if the arg is valid
-            for _ , val in ipairs(command_list.args) do
-              if val.insertText == arg_string then
-                return command_list.fn(arg_string)
-              end
+                -- Check if the arg is valid
+                for _, val in ipairs(command_list.args) do
+                    if val.insertText == arg_string then
+                        return command_list.fn(arg_string)
+                    end
+                end
+                return arg_string .. " is an invalid argument\n"
+
+            else
+                return command_list.fn()
             end
-            vim.notify(arg_string .. " is an invalid argument\n", "error")
         end
     end
     return false
