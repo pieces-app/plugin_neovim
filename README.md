@@ -23,7 +23,7 @@ call plug#begin('~/.vim/plugged')
 Plug 'kyazdani42/nvim-web-devicons'
 Plug 'MunifTanjim/nui.nvim'
 Plug 'hrsh7th/nvim-cmp'
-Plug 'pieces-app/plugin_neo_vim'
+Plug 'pieces-app/plugin_neovim'
 
 call plug#end()
 ```
