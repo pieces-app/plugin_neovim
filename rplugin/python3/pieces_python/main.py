@@ -11,6 +11,7 @@ from .auth import Auth
 from .file_map import file_map
 from .startup import Startup
 from .utils import on_copilot_message
+import os
 
 file_map_reverse = {v:k for k,v in file_map.items()}
 
@@ -38,6 +39,7 @@ class Pieces:
 	def edit_asset(self,args):
 		asset_id,data = args
 		BasicAsset(asset_id).raw_content = data
+		Settings.nvim.out_write("You snippet is saved successfully\n")
 
 	@pynvim.function('PiecesDeleteAsset')
 	def delete_asset(self,args):
@@ -101,6 +103,16 @@ class Pieces:
 		"""first args if true it will show the ui"""
 		if args:
 			self.auth.login(args[0])
+
+	@pynvim.function("PiecesAddContext",sync=True)
+	def add_context(self,args):
+		path,snippet = args
+		if path:
+			if os.path.exists(path):
+				Settings.copilot.context.paths.append(path)
+			else:
+				Settings.nvim.err_write("Invalid paths\n")
+
 
 	## PYTHON COMMANDS
 	@pynvim.command('PiecesHealth')
