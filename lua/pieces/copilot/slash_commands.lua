@@ -134,7 +134,7 @@ function M.handle_slash(line)
                         return command_list.fn(arg_string)
                     end
                 end
-                return arg_string .. " is an invalid argument\n"
+                return arg_string .. " is an invalid argument"
 
             else
                 return command_list.fn()
