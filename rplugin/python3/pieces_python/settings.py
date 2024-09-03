@@ -42,10 +42,10 @@ class Settings:
 		bool: True if the health status is 'ok', False otherwise.
 		"""
 		try:
-			health = cls.api_client.well_known_api.get_well_known_health()
-			return health == "ok"
+			return cls.api_client.well_known_api.get_well_known_health_with_http_info().status_code == 200
 		except:
-			return False
+			pass
+		return False
 
 
 	@classmethod
