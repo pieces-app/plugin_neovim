@@ -1,9 +1,16 @@
 local M = {}
 local Popup = require("nui.popup")
 local uv = vim.loop
+local Layout = require('nui.layout')
 local cmp = require('cmp')
-local relevance_table = require("pieces.copilot.relevance_table")
+local ListUpdater = require("pieces.list_updater")
+local icons = require('nvim-web-devicons')
 
+M.context = {
+    files={},
+    folders={},
+    snippets={}
+}
 local function get_closest_buff_path()
     local buff_path = ""
     local buffers = vim.api.nvim_list_bufs()
@@ -16,8 +23,7 @@ local function get_closest_buff_path()
     end
     return buff_path
 end
-
-local function get_items(path, item_type)
+local function get_paths(path)
     local items = {}
     local dir = path:match("(.*/)")
     if not dir then
@@ -30,31 +36,20 @@ local function get_items(path, item_type)
             local name, type = uv.fs_scandir_next(handle)
             if not name then break end
             local full_path = dir .. name
-            if (item_type == "file" and type == "file") or
-               (item_type == "directory" and type == "directory") then
-                local item = {
-                    label = full_path
-                }
-                if item_type == "directory" then
-                    item.label = full_path .. "/"
-                    item.kind = cmp.lsp.CompletionItemKind.Folder
-                else
-                    local ext = name:match("^.+(%..+)$")
-                    if ext and not relevance_table[ext] then
-                        goto continue  -- Skip files with invalid extensions
-                    end
-                    item.kind = cmp.lsp.CompletionItemKind.File
-                end
-                table.insert(items, item)
+            if type == "directory" then
+                table.insert(items, { label = full_path .. "/", kind = cmp.lsp.CompletionItemKind.Folder })
+            else
+                table.insert(items, { label = full_path, kind = cmp.lsp.CompletionItemKind.File })
             end
-            ::continue::
         end
     end
 
     return items
 end
 
-local function setup_source(name, item_type)
+
+
+local function setup_source()
     local source = {}
     source.new = function()
         return setmetatable({}, { __index = source })
@@ -65,7 +60,7 @@ local function setup_source(name, item_type)
         local path = line:match("^(/%S*)")
 
         if path then
-            local items = get_items(path, item_type)
+            local items = get_paths(path)
             callback({ items = items, isIncomplete = true })
         else
             -- Provide an empty result if no input
@@ -73,21 +68,65 @@ local function setup_source(name, item_type)
         end
     end
 
-    cmp.register_source(name, source)
+    cmp.register_source('pieces_file_path', source)
 end
 
--- Register sources for files and folders
-setup_source('pieces_file', 'file')
-setup_source('pieces_folder', 'directory')
+setup_source()
 
-
-M.setup_buffer = function(bufnr,name)
+M.setup_buffer = function(bufnr)
     cmp.setup.buffer({
         sources = {
-            { name = name }
+            { name = 'pieces_file_path' }
         },
     }, bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+end
+
+local function build_result_layout(input,items)
+    local results_popup = Popup({
+        relative = "editor",
+        position = "50%",
+        size = {
+            width = "60%",
+            height = "50%",
+        },
+        border = {
+            style = "rounded",
+            text = {
+                top = " Conversations ",
+                top_align = "center",
+            },
+        },
+        win_options = {
+            winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+        },
+    })
+    local updater = ListUpdater:new(results_popup,
+    1, items,
+    function (item)
+        local icon = icons.get_icon(item)
+        icon = icon or ""
+        return icon .. "  " .. item
+    end,
+    function (item)
+    end,
+    function (item) end)
+    local layout = Layout({
+            relative = "editor",
+            position = "50%",
+            size = {
+                width = "90%",
+                height = "80%",
+            },
+        },
+        Layout.Box({
+            Layout.Box({
+                Layout.Box(results_popup, { size = "90%" }),
+                Layout.Box(input, { size = "10%" }),
+            }, { dir = "col", size = "60%" }),}
+        ))
+    layout.mount()
+    updater:setup()
 end
 
 function M.setup(item)
@@ -109,22 +148,23 @@ function M.setup(item)
             winhighlight = "Normal:Normal",
         },
     }
-
     local input = Popup(popup_options)
     vim.api.nvim_buf_set_lines(input.bufnr, -1, -1, false, { get_closest_buff_path() })
-    input:mount()
+    if item == "Folder" and M.context["folders"] ~= {} then
+        build_result_layout(input,M.context["folders"])
+    elseif item == "File" and M.context["files"] ~= {} then
+        build_result_layout(input,M.context["files"])
+    else
+        input:mount()
+    end
     vim.api.nvim_set_current_win(input.winid)
+
     vim.keymap.set({ "n","i" }, "<Enter>", function()
-        vim.fn.PiecesAddContext(vim.api.nvim_buf_get_lines(input.bufnr, 0, 1, false),nil)
+        vim.fn.PiecesAddContext(vim.api.nvim_buf_get_lines(input.bufnr, 0, 1, false)[1],nil)
         input:unmount()
     end, { buffer = input.bufnr })
-    local name
-    if item == "Folder" then
-        name = "pieces_folder"
-    else
-        name = "pieces_file"
-    end
-    M.setup_buffer(input.bufnr,name)
+    M.setup_buffer(input.bufnr)
 end
+
 
 return M

@@ -86,6 +86,7 @@ class Pieces:
 		else:
 			conversation = None
 		Settings.copilot.chat = conversation
+		Settings.nvim.exec_lua("require('pieces.copilot.context.paths').context = {files={},folders={},snippets={}}")
 
 	@pynvim.function("PiecesDeleteConversation")
 	def delete_conversation(self,args):
@@ -102,14 +103,22 @@ class Pieces:
 	def login_function(self,args):
 		"""first args if true it will show the ui"""
 		if args:
-			self.auth.login(args[0])
+			return self.auth.login(args[0])
+		self.auth.login()
 
 	@pynvim.function("PiecesAddContext",sync=True)
 	def add_context(self,args):
 		path,snippet = args
+		self.nvim.out_write(f"{args}\n")
 		if path:
 			if os.path.exists(path):
-				Settings.copilot.context.paths.append(path)
+				Settings.copilot.context.paths.append(path) 
+				type = "folders" if os.path.isdir(path) else "files"
+				Settings.nvim.exec_lua(
+				    "table.insert(require('pieces.copilot.context.paths').context['%s'], '%s')"
+				    % (type, path)
+				)
+
 			else:
 				Settings.nvim.err_write("Invalid paths\n")
 
