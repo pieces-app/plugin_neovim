@@ -2,6 +2,7 @@ local M = {}
 local Popup = require("nui.popup")
 local uv = vim.loop
 local cmp = require('cmp')
+local relevance_table = require("pieces.copilot.relevance_table")
 
 local function get_closest_buff_path()
     local buff_path = ""
@@ -15,7 +16,8 @@ local function get_closest_buff_path()
     end
     return buff_path
 end
-local function get_paths(path)
+
+local function get_items(path, item_type)
     local items = {}
     local dir = path:match("(.*/)")
     if not dir then
@@ -28,20 +30,31 @@ local function get_paths(path)
             local name, type = uv.fs_scandir_next(handle)
             if not name then break end
             local full_path = dir .. name
-            if type == "directory" then
-                table.insert(items, { label = full_path .. "/", kind = cmp.lsp.CompletionItemKind.Folder })
-            else
-                table.insert(items, { label = full_path, kind = cmp.lsp.CompletionItemKind.File })
+            if (item_type == "file" and type == "file") or
+               (item_type == "directory" and type == "directory") then
+                local item = {
+                    label = full_path
+                }
+                if item_type == "directory" then
+                    item.label = full_path .. "/"
+                    item.kind = cmp.lsp.CompletionItemKind.Folder
+                else
+                    local ext = name:match("^.+(%..+)$")
+                    if ext and not relevance_table[ext] then
+                        goto continue  -- Skip files with invalid extensions
+                    end
+                    item.kind = cmp.lsp.CompletionItemKind.File
+                end
+                table.insert(items, item)
             end
+            ::continue::
         end
     end
 
     return items
 end
 
-
-
-local function setup_source()
+local function setup_source(name, item_type)
     local source = {}
     source.new = function()
         return setmetatable({}, { __index = source })
@@ -52,7 +65,7 @@ local function setup_source()
         local path = line:match("^(/%S*)")
 
         if path then
-            local items = get_paths(path)
+            local items = get_items(path, item_type)
             callback({ items = items, isIncomplete = true })
         else
             -- Provide an empty result if no input
@@ -60,15 +73,18 @@ local function setup_source()
         end
     end
 
-    cmp.register_source('pieces_file_path', source)
+    cmp.register_source(name, source)
 end
 
-setup_source()
+-- Register sources for files and folders
+setup_source('pieces_file', 'file')
+setup_source('pieces_folder', 'directory')
 
-M.setup_buffer = function(bufnr)
+
+M.setup_buffer = function(bufnr,name)
     cmp.setup.buffer({
         sources = {
-            { name = 'pieces_file_path' }
+            { name = name }
         },
     }, bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
@@ -102,7 +118,13 @@ function M.setup(item)
         vim.fn.PiecesAddContext(vim.api.nvim_buf_get_lines(input.bufnr, 0, 1, false),nil)
         input:unmount()
     end, { buffer = input.bufnr })
-    M.setup_buffer(input.bufnr)
+    local name
+    if item == "Folder" then
+        name = "pieces_folder"
+    else
+        name = "pieces_file"
+    end
+    M.setup_buffer(input.bufnr,name)
 end
 
 return M
