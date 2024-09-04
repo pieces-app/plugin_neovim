@@ -10,7 +10,8 @@ function ListUpdater:new(results_popup,
     get_annotation,
     enter_keymap,
     delete_keymap,
-    on_update)
+    on_update,
+    multi_select)
     local instance = {
         results_popup=results_popup,
         current_index = current_index,
@@ -19,12 +20,13 @@ function ListUpdater:new(results_popup,
         get_annotation=get_annotation,
         enter_keymap=enter_keymap,
         delete_keymap=delete_keymap,
-        on_update=on_update
+        on_update=on_update,
+        multi_select=multi_select or false,
+        selected_items = {}
     }
     setmetatable(instance, ListUpdater)
     return instance
 end
-
 
 function ListUpdater:_update_list_common()
     if self.results_popup == nil or type(self.results_popup.bufnr) ~= "number" or not vim.api.nvim_buf_is_valid(self.results_popup.bufnr) then
@@ -36,9 +38,16 @@ function ListUpdater:_update_list_common()
 
     for i, item in ipairs(self.items) do
         local base_name = self.get_base_name(item)
+        local prefix = " "
+        if self.multi_select and self.selected_items[i] then
+            prefix = "*"
+        elseif i == self.current_index then
+            prefix = ">"
+        end
+
         if i == self.current_index then
             -- Highlighted line (current selection)
-            local highlighted_line = "> " .. base_name .. " "
+            local highlighted_line = prefix .. " " .. base_name .. " "
             local annotation = self.get_annotation(item):gsub("\n", " ")
             start_col = #highlighted_line
             highlighted_line = highlighted_line .. annotation
@@ -46,7 +55,7 @@ function ListUpdater:_update_list_common()
             annotation_index = i - 1 -- Convert to 0-based index for highlighting
             table.insert(lines, highlighted_line)
         else
-            table.insert(lines, " " .. base_name)
+            table.insert(lines, prefix .. " " .. base_name)
         end
     end
 
@@ -85,6 +94,12 @@ function ListUpdater:up_keymap()
     end
 end
 
+function ListUpdater:toggle_selection()
+    if self.multi_select then
+        self.selected_items[self.current_index] = not self.selected_items[self.current_index]
+        self:update()
+    end
+end
 
 function ListUpdater:setup_keymaps()
     local keymaps = {
@@ -94,7 +109,7 @@ function ListUpdater:setup_keymaps()
         ["<enter>"] = function() self.enter_keymap(self.items[self.current_index]) end,
         ["<Del>"] = function() self.delete_keymap(self.items[self.current_index]) end,
         ["<kDel>"] = function() self.delete_keymap(self.items[self.current_index]) end,
-        ["<BS>"] = function() self.delete_keymap(self.items[self.current_index]) end
+        ["<BS>"] = function() self.delete_keymap(self.items[self.current_index]) end,
     }
     local modes = { "i", "n" }
 
@@ -104,10 +119,12 @@ function ListUpdater:setup_keymaps()
         end
     end
 end
+
 function ListUpdater:setup()
     self:setup_keymaps()
     self:update()
 end
+
 function ListUpdater:mount()
     self.results_popup:mount()
     vim.api.nvim_set_current_win(self.results_popup.winid)

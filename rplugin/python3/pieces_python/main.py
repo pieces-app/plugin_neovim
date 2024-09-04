@@ -120,6 +120,8 @@ class Pieces:
 
 			else:
 				Settings.nvim.err_write("Invalid paths\n")
+		if snippet:
+			Settings.copilot.context.assets.append(BasicAsset(snippet))
 
 
 	## PYTHON COMMANDS

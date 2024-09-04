@@ -1,10 +1,10 @@
 local Popup = require('nui.popup')
 local ListUpdater = require("pieces.list_updater")
 local make_buffer_read_only = require("pieces.utils").make_buffer_read_only
-local context = require("pieces.copilot.context")
 local M = {}
 local results_popup,updater
 local path = require("pieces.copilot.context.paths")
+local assets = require("pieces.copilot.context.assets")
 
 local annotations = {
 	Folders="Add local code repositories and folders as context for your Copilot",
@@ -16,6 +16,8 @@ local function on_enter(item)
 	results_popup:unmount()
 	if item == "Files" or item == "Folders" then
 		return path.setup(item)
+	else
+		assets.setup()
 	end
 end
 
