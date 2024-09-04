@@ -1,4 +1,4 @@
-local context = require("pieces.copilot.context")
+local context = require("pieces.copilot.context.ui")
 local M = {}
 local commands
 

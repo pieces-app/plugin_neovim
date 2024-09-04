@@ -1,18 +1,15 @@
 local M = {}
 local Popup = require("nui.popup")
-local uv = vim.loop
 local Layout = require('nui.layout')
 local cmp = require('cmp')
-local ListUpdater = require("pieces.list_updater")
 local icons = require('nvim-web-devicons')
+local ListUpdater = require("pieces.list_updater")
+local relevance = require("pieces.copilot.relevance_table")
+local context = require("pieces.copilot.context").context
+local uv = vim.loop
 
-M.context = {
-    files={},
-    folders={},
-    snippets={}
-}
 local function get_closest_buff_path()
-    local buff_path = ""
+    local buff_path = "/"
     local buffers = vim.api.nvim_list_bufs()
     for _, buffer in ipairs(buffers) do
         if vim.api.nvim_buf_is_loaded(buffer) then
@@ -39,7 +36,14 @@ local function get_paths(path)
             if type == "directory" then
                 table.insert(items, { label = full_path .. "/", kind = cmp.lsp.CompletionItemKind.Folder })
             else
-                table.insert(items, { label = full_path, kind = cmp.lsp.CompletionItemKind.File })
+                local extension = full_path:match("^.+%.(.+)$")
+                for _,v in ipairs(relevance) do
+                    if extension == v then
+                        table.insert(items, { label = full_path, kind = cmp.lsp.CompletionItemKind.File })
+                        goto continue
+                    end
+                end
+                ::continue::
             end
         end
     end
@@ -82,19 +86,19 @@ M.setup_buffer = function(bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 end
 
-local function build_result_layout(input,items)
+local function build_result_layout(input,items,type)
     local results_popup = Popup({
         relative = "editor",
         position = "50%",
         size = {
             width = "60%",
-            height = "50%",
+            height = #items + 1,
         },
         border = {
             style = "rounded",
             text = {
-                top = " Conversations ",
-                top_align = "center",
+                top = " " .. type .. " ",
+                top_align = "left",
             },
         },
         win_options = {
@@ -104,28 +108,33 @@ local function build_result_layout(input,items)
     local updater = ListUpdater:new(results_popup,
     1, items,
     function (item)
-        local icon = icons.get_icon(item)
-        icon = icon or ""
-        return icon .. "  " .. item
+        if item.type == "file" then
+            local icon = icons.get_icon(item.path)
+            icon = icon or ""
+            return icon .. "  " .. item.path
+        else
+            return  '📁 ' .. item.path
+        end
     end,
     function (item)
+        return ""
     end,
     function (item) end)
     local layout = Layout({
             relative = "editor",
             position = "50%",
             size = {
-                width = "90%",
-                height = "80%",
+                width = "60%",
+                height = #items + 4,
             },
         },
         Layout.Box({
             Layout.Box({
                 Layout.Box(results_popup, { size = "90%" }),
                 Layout.Box(input, { size = "10%" }),
-            }, { dir = "col", size = "60%" }),}
+            }, { dir = "col", size = "100%" }),}
         ))
-    layout.mount()
+    layout:mount()
     updater:setup()
 end
 
@@ -150,10 +159,10 @@ function M.setup(item)
     }
     local input = Popup(popup_options)
     vim.api.nvim_buf_set_lines(input.bufnr, -1, -1, false, { get_closest_buff_path() })
-    if item == "Folder" and M.context["folders"] ~= {} then
-        build_result_layout(input,M.context["folders"])
-    elseif item == "File" and M.context["files"] ~= {} then
-        build_result_layout(input,M.context["files"])
+    if item == "Folders" and next(context["folders"]) ~= nil then
+        build_result_layout(input,context["folders"],"Folders")
+    elseif item == "Files" and next(context["files"]) ~= nil then
+        build_result_layout(input,context["files"],"Files")
     else
         input:mount()
     end
