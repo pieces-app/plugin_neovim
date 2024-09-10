@@ -90,11 +90,15 @@ function ListUpdater:setup_keymaps()
     local keymaps = {
         ["<Up>"] = function() self:up_keymap() end,
         ["<Down>"] = function() self:down_keymap() end,
+        ["<C-k>"] = function() self:up_keymap() end,
+        ["<C-j>"] = function() self:down_keymap() end,
         ["<esc>"] = function() self.results_popup:unmount() end,
+        ["<C-c>"] = function() self.results_popup:unmount() end,
         ["<enter>"] = function() self.enter_keymap(self.items[self.current_index]) end,
         ["<Del>"] = function() self.delete_keymap(self.items[self.current_index]) end,
         ["<kDel>"] = function() self.delete_keymap(self.items[self.current_index]) end,
-        ["<BS>"] = function() self.delete_keymap(self.items[self.current_index]) end
+        ["<BS>"] = function() self.delete_keymap(self.items[self.current_index]) end,
+        ["<C-d>"] = function() self.delete_keymap(self.items[self.current_index]) end
     }
     local modes = { "i", "n" }
 
