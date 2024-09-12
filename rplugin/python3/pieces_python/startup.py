@@ -27,7 +27,7 @@ class Startup:
 		except:  # Internet issues or status code is not 200
 			pass
 		if Settings.get_health():
-			HealthWS(Settings.api_client, cls.on_message, cls.on_startup, cls.on_close).start()
+			HealthWS(Settings.api_client, cls.on_message, cls.on_startup, on_close=lambda x,y,z:cls.on_close).start()
 
 	@classmethod
 	def on_message(cls, message):
@@ -55,7 +55,7 @@ class Startup:
 			Settings.nvim.async_call(Settings.nvim.err_write, f"Please update {plugin}\n")
 	
 	@staticmethod
-	def on_close(ws):
+	def on_close():
 		Settings.is_loaded = False
 
 	@classmethod

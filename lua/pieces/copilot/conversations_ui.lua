@@ -37,7 +37,7 @@ local updater = ListUpdater:new(results_popup,1,conversations,
 
 	        ::continue::
 	    end
-	    vim.fn.PiecesSetConversation(item.id)
+	    conversations_module.set_conversation(item.id)
 	end,
 	function (item)
 	    local choice = vim.fn.confirm("Are you sure you want to delete '" .. item.name .."'", "&Yes\n&No", 1)

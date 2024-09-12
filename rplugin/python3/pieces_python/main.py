@@ -11,6 +11,7 @@ from .auth import Auth
 from .file_map import file_map
 from .startup import Startup
 from .utils import on_copilot_message
+import os
 
 file_map_reverse = {v:k for k,v in file_map.items()}
 
@@ -38,6 +39,7 @@ class Pieces:
 	def edit_asset(self,args):
 		asset_id,data = args
 		BasicAsset(asset_id).raw_content = data
+		Settings.nvim.out_write("You snippet is saved successfully\n")
 
 	@pynvim.function('PiecesDeleteAsset')
 	def delete_asset(self,args):
@@ -58,7 +60,7 @@ class Pieces:
 
 
 	@pynvim.function("PiecesCreateSnippet",sync=False)
-	def create_asset(self,args): 
+	def create_asset(self,args):
 		try: metadata = FragmentMetadata(ext=file_map_reverse.get(self.nvim.api.buf_get_option(0, 'filetype')))
 		except: metadata = None
 		BasicAsset.create(args[0], metadata)
@@ -100,7 +102,26 @@ class Pieces:
 	def login_function(self,args):
 		"""first args if true it will show the ui"""
 		if args:
-			self.auth.login(args[0])
+			return self.auth.login(args[0])
+		self.auth.login()
+
+	@pynvim.function("PiecesAddContext",sync=True)
+	def add_context(self,args):
+		path,snippet = args
+		if path:
+			if os.path.exists(path):
+				Settings.copilot.context.paths.append(path) 
+				type = "folders" if os.path.isdir(path) else "files"
+				Settings.nvim.exec_lua(
+				    f"table.insert(require('pieces.copilot.context').context['{type}'], '{path}')"
+				)
+			else:
+				Settings.nvim.err_write("Invalid paths\n")
+		if snippet:
+			Settings.copilot.context.assets.append(BasicAsset(snippet))
+			Settings.nvim.exec_lua(
+				    f"table.insert(require('pieces.copilot.context').context['snippets'], '{snippet}')"
+				)
 
 	## PYTHON COMMANDS
 	@pynvim.command('PiecesHealth')
@@ -165,7 +186,5 @@ class Pieces:
 	@pynvim.command('PiecesCreateSnippet', range='', nargs='*')
 	@is_pieces_opened
 	def pieces_create_snippet(self, args, range):
-		line1 = range[0]
-		line2 = range[1]
-		self.nvim.exec_lua(f"require('pieces.assets.create').setup({line1}, {line2})")
+		self.nvim.exec_lua(f"require('pieces.assets.create').setup()")
 

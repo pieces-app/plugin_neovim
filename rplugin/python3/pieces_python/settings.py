@@ -60,7 +60,7 @@ class Settings:
 			"""
 			out = cls.nvim.exec_lua(lua_code)
 
-			setattr(cls,config,out)
+			setattr(cls,config,out) # Setting up the host and the os
 
 		if not cls.host:
 			if 'linux' == cls.os:
