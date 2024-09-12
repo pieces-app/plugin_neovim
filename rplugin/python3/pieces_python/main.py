@@ -60,7 +60,7 @@ class Pieces:
 
 
 	@pynvim.function("PiecesCreateSnippet",sync=False)
-	def create_asset(self,args): 
+	def create_asset(self,args):
 		try: metadata = FragmentMetadata(ext=file_map_reverse.get(self.nvim.api.buf_get_option(0, 'filetype')))
 		except: metadata = None
 		BasicAsset.create(args[0], metadata)
@@ -86,7 +86,6 @@ class Pieces:
 		else:
 			conversation = None
 		Settings.copilot.chat = conversation
-		Settings.nvim.exec_lua("require('pieces.copilot.context').context = {files={},folders={},snippets={}}")
 
 	@pynvim.function("PiecesDeleteConversation")
 	def delete_conversation(self,args):
@@ -114,15 +113,15 @@ class Pieces:
 				Settings.copilot.context.paths.append(path) 
 				type = "folders" if os.path.isdir(path) else "files"
 				Settings.nvim.exec_lua(
-				    f"table.insert(require('pieces.copilot.context').context['{type}'], {{type='{type[:-1]}', path='{path}'}})"
+				    f"table.insert(require('pieces.copilot.context').context['{type}'], '{path}')"
 				)
-
-
 			else:
 				Settings.nvim.err_write("Invalid paths\n")
 		if snippet:
 			Settings.copilot.context.assets.append(BasicAsset(snippet))
-
+			Settings.nvim.exec_lua(
+				    f"table.insert(require('pieces.copilot.context').context['snippets'], '{snippet}')"
+				)
 
 	## PYTHON COMMANDS
 	@pynvim.command('PiecesHealth')
@@ -187,7 +186,5 @@ class Pieces:
 	@pynvim.command('PiecesCreateSnippet', range='', nargs='*')
 	@is_pieces_opened
 	def pieces_create_snippet(self, args, range):
-		line1 = range[0]
-		line2 = range[1]
-		self.nvim.exec_lua(f"require('pieces.assets.create').setup({line1}, {line2})")
+		self.nvim.exec_lua(f"require('pieces.assets.create').setup()")
 

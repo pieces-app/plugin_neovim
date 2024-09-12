@@ -1,4 +1,3 @@
--- Define the ListUpdater class
 local ListUpdater = {}
 ListUpdater.__index = ListUpdater
 
@@ -11,13 +10,16 @@ function ListUpdater:new(results_popup,
     enter_keymap,
     delete_keymap,
     on_update,
-    multi_select)
+    multi_select,
+    get_unique_id)  -- Optional function to get unique identifier
+
     local instance = {
         results_popup=results_popup,
         current_index = current_index,
         items = items,
         get_base_name=get_base_name,
         get_annotation=get_annotation,
+        get_unique_id=multi_select and get_unique_id or nil,  -- Store the function only if multi_select is true
         enter_keymap=enter_keymap,
         delete_keymap=delete_keymap,
         on_update=on_update,
@@ -39,7 +41,9 @@ function ListUpdater:_update_list_common()
     for i, item in ipairs(self.items) do
         local base_name = self.get_base_name(item)
         local prefix = " "
-        if self.multi_select and self.selected_items[i] then
+        local unique_id = self.multi_select and self.get_unique_id(item) or nil  -- Get the unique identifier only if multi_select is true
+
+        if self.multi_select and self.selected_items[unique_id] then
             prefix = "*"
         elseif i == self.current_index then
             prefix = ">"
@@ -96,7 +100,8 @@ end
 
 function ListUpdater:toggle_selection()
     if self.multi_select then
-        self.selected_items[self.current_index] = not self.selected_items[self.current_index]
+        local unique_id = self.get_unique_id(self.items[self.current_index])
+        self.selected_items[unique_id] = not self.selected_items[unique_id]
         self:update()
     end
 end

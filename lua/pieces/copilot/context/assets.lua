@@ -6,7 +6,9 @@ local ListUpdater = require("pieces.list_updater")
 local results_popup
 local M = {}
 local updater
-updater = ListUpdater:new(results_popup,1,snippets.snippets,
+
+updater = ListUpdater:new(results_popup,1,
+    snippets.snippets,
     function(snippet)
         local icon = icons.get_icon("dummy", snippet.language)
         icon = icon or ""
@@ -15,12 +17,16 @@ updater = ListUpdater:new(results_popup,1,snippets.snippets,
     function(snippet)
         return snippet.annotation:gsub("\n", " ")
     end,
-    function (item)
+    function (snippet)
         updater:toggle_selection()
-        vim.fn.PiecesAddContext(nil,item.id)
+        vim.fn.PiecesAddContext(nil,snippet.id)
     end,
-    function (item) end,
-    function (updater) end,true)
+    function (snippet) end,
+    function (updater) end,
+    true,
+    function(snippet)
+        return snippet.id
+    end)
 
 function M.setup()
     -- Create the results popup
@@ -42,6 +48,10 @@ function M.setup()
             winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
         },
     })
+    local context = require('pieces.copilot.context').context
+    for _, item in ipairs(context["snippets"]) do
+        updater.selected_items [item] = true
+    end
     make_buffer_read_only(results_popup.bufnr)
     updater.results_popup = results_popup -- Update the new result popup
     updater:mount()
