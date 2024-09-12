@@ -1,5 +1,6 @@
 local copilot_ui         = require("pieces.copilot.copilot_ui")
 local slash_commands     = require("pieces.copilot.slash_commands")
+local conversations      = require("pieces.copilot.conversations")
 
 local create_input_popup = copilot_ui.create_input_popup
 local create_chat_popup  = copilot_ui.create_chat_popup
@@ -58,7 +59,7 @@ local function setup()
 		layout:unmount()
 	end
 	chat_popup = create_chat_popup()
-	vim.fn.PiecesSetConversation()
+	conversations.set_conversation()
 	local function on_submit(value)
 		local has_non_space_string = false
 		local content = ""

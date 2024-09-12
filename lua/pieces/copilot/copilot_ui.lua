@@ -1,6 +1,7 @@
 local NuiPopup  = require('nui.popup')
 local NuiLayout = require('nui.layout')
 local NuiSplit  = require('nui.split')
+local conversation = require("pieces.copilot.conversations")
 local make_buffer_read_only = require("pieces.utils").make_buffer_read_only
 local layout
 
@@ -58,7 +59,7 @@ local function create_input_popup(on_submit)
 		prompt = prompt,
 		on_close = function()
 			layout:unmount()
-			vim.fn.PiecesSetConversation()
+			conversation.set_conversation()
 		end,
 
 	})

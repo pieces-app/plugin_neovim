@@ -1,3 +1,4 @@
+local context = require("pieces.copilot.context")
 local M = {}
 
 M.conversations = {}
@@ -40,6 +41,14 @@ function M.remove_conversation(conversation_id)
             return
         end
     end
+end
+
+function M.set_conversation(item_id)
+    context.reset() -- Reset the context table
+    if item_id then
+        return vim.fn.PiecesSetConversation(item_id)
+    end
+    vim.fn.PiecesSetConversation(item_id)
 end
 
 return M
