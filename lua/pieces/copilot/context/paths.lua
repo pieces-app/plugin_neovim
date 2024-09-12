@@ -5,7 +5,6 @@ local cmp = require('cmp')
 local icons = require('nvim-web-devicons')
 local ListUpdater = require("pieces.list_updater")
 local relevance = require("pieces.copilot.relevance_table")
-local context = require("pieces.copilot.context").context
 local uv = vim.loop
 
 local function get_closest_buff_path()
@@ -108,12 +107,12 @@ local function build_result_layout(input,items,type)
     local updater = ListUpdater:new(results_popup,
     1, items,
     function (item)
-        if item.type == "file" then
-            local icon = icons.get_icon(item.path)
+        if type == "Files" then
+            local icon = icons.get_icon(item)
             icon = icon or ""
-            return icon .. "  " .. item.path
+            return icon .. "  " .. item
         else
-            return  '📁 ' .. item.path
+            return  '📁 ' .. item
         end
     end,
     function (item)
@@ -139,6 +138,7 @@ local function build_result_layout(input,items,type)
 end
 
 function M.setup(item)
+    local context = require("pieces.copilot.context").context
     local popup_options = {
         relative = "editor",
         position = "50%",
@@ -159,6 +159,7 @@ function M.setup(item)
     }
     local input = Popup(popup_options)
     vim.api.nvim_buf_set_lines(input.bufnr, -1, -1, false, { get_closest_buff_path() })
+    print(vim.inspect(context))
     if item == "Folders" and next(context["folders"]) ~= nil then
         build_result_layout(input,context["folders"],"Folders")
     elseif item == "Files" and next(context["files"]) ~= nil then

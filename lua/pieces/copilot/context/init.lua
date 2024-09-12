@@ -1,10 +1,12 @@
 M = {}
 
-M.context = {
-    files={}, -- Every file have .path and .type
-    folders={}, -- Every folder have .path and .type
+M.reset = function()
+    M.context = {
+    files={},
+    folders={},
     snippets={}
 }
+end
 
-
+M.reset()
 return M
