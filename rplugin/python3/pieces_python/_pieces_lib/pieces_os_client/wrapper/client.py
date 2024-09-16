@@ -16,35 +16,77 @@ from pieces_python._pieces_lib.pieces_os_client import (
     FragmentMetadata,
     ModelsApi,
     AnnotationApi,
+    LinkifyApi,
     WellKnownApi,
     OSApi,
-    AllocationsApi
+    AllocationsApi,
+    SearchApi,
+    __version__
 )
 from typing import Optional,Dict
 import platform
 import atexit
+import subprocess
+import urllib.request
+import urllib.error
 
 from .copilot import Copilot
-from .basic_identifier import BasicAsset
+from .basic_identifier import BasicAsset,BasicUser
 from .streamed_identifiers import AssetSnapshot
 from .websockets import *
 
+
 class PiecesClient:
-    def __init__(self, host:str="",config: dict={}, seeded_connector: Optional[SeededConnectorConnection] = None):
-        if host:
-            self.host = host
-        else:
-            self.host = "http://localhost:5323" if 'Linux' in platform.platform() else "http://localhost:1000"
+    def __init__(self, host:str="", seeded_connector: Optional[SeededConnectorConnection] = None,**kwargs):
+        if not host:
+            host = "http://localhost:5323" if 'Linux' in platform.platform() else "http://localhost:1000"
 
-        connect_websockets= True
-        if "connect_websockets" in config:
-            connect_websockets = config["connect_websockets"]
-            del config["connect_websockets"]
+        self.host = host
+        self.models = None
+        self._is_started_runned = False
+        self.local_os = platform.system().upper() if platform.system().upper() in ["WINDOWS","LINUX","DARWIN"] else "WEB"
+        self.local_os = "MACOS" if self.local_os == "DARWIN" else self.local_os
+        self._seeded_connector = seeded_connector or SeededConnectorConnection(
+            application=SeededTrackedApplication(
+                name = "OPEN_SOURCE",
+                platform = self.local_os,
+                version = __version__)) 
+        self._connect_websockets = kwargs.get("connect_wesockets",True)
+        self.user = BasicUser(self)   
+        self.copilot = Copilot(self)
+        self._startup()
 
-        self.config = Configuration(**config,host=host)
 
-        self.api_client = ApiClient(self.config)
+    def _startup(self) -> bool:
+        if self._is_started_runned: return True
+        if not self.is_pieces_running(): return False
 
+        self._is_started_runned = True
+        self.tracked_application = self.connector_api.connect(seeded_connector_connection=self._seeded_connector).application
+        self.api_client.set_default_header("application",self.tracked_application.id)
+
+        if self._connect_websockets:
+            self.conversation_ws = ConversationWS(self)
+            self.assets_ws = AssetsIdentifiersWS(self)
+            self.user_websocket = AuthWS(self,self.user.on_user_callback)
+            # Start all initilized websockets
+            BaseWebsocket.start_all()
+        
+        self.model_name = "GPT-3.5-turbo Chat Model"
+        return True
+
+
+    @property
+    def host(self) -> str:
+        return self._host
+
+    @host.setter
+    def host(self,host:str):
+        if not host.startswith("http"):
+            raise TypeError("Invalid host url\n Host should start with http or https")
+
+        self._host = host
+        self.api_client = ApiClient(Configuration(host))
         self.conversation_message_api = ConversationMessageApi(self.api_client)
         self.conversation_messages_api = ConversationMessagesApi(self.api_client)
         self.conversations_api = ConversationsApi(self.api_client)
@@ -60,38 +102,16 @@ class PiecesClient:
         self.well_known_api = WellKnownApi(self.api_client)
         self.os_api = OSApi(self.api_client)
         self.allocations_api = AllocationsApi(self.api_client)
+        self.linkfy_api = LinkifyApi(self.api_client)
+        self.search_api = SearchApi(self.api_client)
 
         # Websocket urls
-        if 'http' not in self.host:
-            raise TypeError("Invalid host url\n Host should start with http or https")
-        ws_base_url:str = self.host.replace('http','ws')
-        
+        ws_base_url:str = host.replace('http','ws')
         self.ASSETS_IDENTIFIERS_WS_URL = ws_base_url + "/assets/stream/identifiers"
         self.AUTH_WS_URL = ws_base_url + "/user/stream"
         self.ASK_STREAM_WS_URL = ws_base_url + "/qgpt/stream"
         self.CONVERSATION_WS_URL = ws_base_url + "/conversations/stream/identifiers"
         self.HEALTH_WS_URL = ws_base_url + "/.well-known/stream/health"
-
-        local_os = platform.system().upper() if platform.system().upper() in ["WINDOWS","LINUX","DARWIN"] else "WEB"
-        local_os = "MACOS" if local_os == "DARWIN" else local_os
-        seeded_connector = seeded_connector or SeededConnectorConnection(
-            application=SeededTrackedApplication(
-                name = "OPEN_SOURCE",
-                platform = local_os,
-                version = "0.0.1"))
-
-        self.tracked_application = self.connector_api.connect(seeded_connector_connection=seeded_connector).application
-
-        if connect_websockets:
-            self.conversation_ws = ConversationWS(self)
-            self.assets_ws = AssetsIdentifiersWS(self)
-
-            # Start all initilized websockets
-            BaseWebsocket.start_all()
-        
-        self.models = None
-        self.model_name = "GPT-3.5-turbo Chat Model"
-
 
     def assets(self):
         self.ensure_initialization()
@@ -105,13 +125,6 @@ class PiecesClient:
     def create_asset(content:str,metadata:Optional[FragmentMetadata]=None):
         return BasicAsset.create(content,metadata)
 
-    def get_user_profile_picture(self) -> Optional[str]:
-        try:
-            user_res = self.user_api.user_snapshot()
-            return user_res.user.picture or None
-        except Exception as error:
-            print(f'Error getting user profile picture: {error}')
-            return None
 
     def get_models(self) -> Dict[str, str]:
         if self.models:
@@ -137,21 +150,67 @@ class PiecesClient:
     def available_models_names(self) -> list:
         return list(self.get_models().keys())
 
-    @property
-    def copilot(self):
-        return Copilot(self)
-
     def ensure_initialization(self):
         """
             Waits for all the assets/conversations and all the started websockets to open
         """
-        BaseWebsocket.wait_all()
+        pass
 
     def close(self):
         """
             Use this when you exit the app
         """
         BaseWebsocket.close_all()
+
+    @property
+    def version(self) -> str:
+        """
+            Returns Pieces OS Version
+        """
+        return self.well_known_api.get_well_known_version()
+ 
+    @property
+    def health(self) -> str:
+        """
+            Calls the well known health api
+            /.well-known/health [GET]
+        """
+        return self.well_known_api.get_well_known_health()
+
+
+    def open_pieces_os(self) -> bool:
+        """
+            Open Pieces OS
+
+            Returns (bool): true if Pieces OS runned successfully else false 
+        """
+        if self.is_pieces_running(): return True
+        if self.local_os == "WINDOWS":
+            subprocess.run(["start", "pieces://launch"], shell=True)
+        elif self.local_os == "MACOS":
+            subprocess.run(["open","pieces://launch"])
+        elif self.local_os == "LINUX":
+            subprocess.run(["xdg-open","pieces://launch"])
+        return self.is_pieces_running(maxium_retries=3)
+
+
+    def is_pieces_running(self,maxium_retries=1) -> bool:
+        """
+            Checks if Pieces OS is running or not
+
+            Returns (bool): true if Pieces OS is running 
+        """
+        for _ in range(maxium_retries):
+            try:
+                with urllib.request.urlopen(f"{self.host}/.well-known/health", timeout=1) as response:
+                    return response.status == 200
+            except:
+                pass
+        return False
+
+    def _check_startup(self):
+        if not self._startup():
+            raise ValueError("PiecesClient is not started successfully\nPerhaps Pieces OS is not running")
 
 # Register the function to be called on exit
 atexit.register(BaseWebsocket.close_all)

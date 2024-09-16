@@ -1,5 +1,7 @@
 from ._pieces_lib.pieces_os_client.wrapper.basic_identifier.chat import BasicChat
+from ._pieces_lib.pieces_os_client.wrapper.websockets import BaseWebsocket
 from .settings import Settings
+import concurrent.futures
 
 def convert_to_lua_table(python_dict):
 	"""
@@ -48,9 +50,35 @@ def on_copilot_message(message):
 		Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
 			require("pieces.copilot").completed(true)
 		""")
-		Settings.copilot.chat = BasicChat(message.conversation)
+		Settings.api_client.copilot.chat = BasicChat(message.conversation)
 	elif message.status == "FAILED":
 		Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
 			require("pieces.copilot").completed(true)
 		""")
 		return # TODO: Add a better error message
+
+def start_pieces_os(callback_sucess,callback_failed):
+	with concurrent.futures.ThreadPoolExecutor() as executor:
+		future = executor.submit(Settings.api_client.open_pieces_os)
+		started = future.result()
+		if started:
+			callback_sucess()
+		else:
+			callback_failed()
+
+
+def is_pieces_opened(func):
+	def wrapper(*args, **kwargs):
+		if Settings.is_loaded:
+			return func(*args, **kwargs)
+		else:
+			# Run the health request to check if the server is running
+			with concurrent.futures.ThreadPoolExecutor() as executor:
+				future = executor.submit(Settings.api_client.is_pieces_running)
+				health = future.result()
+				if health:
+					BaseWebsocket.start_all()
+					return func(*args,**kwargs)
+				else:
+					return Settings.nvim.err_write("Please make sure Pieces OS is running and updated\n")
+	return wrapper

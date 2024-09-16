@@ -1,8 +1,8 @@
 import pynvim
 
 from .settings import Settings
-from .api import get_version,version_check,is_pieces_opened
-from ._pieces_lib.pieces_os_client.wrapper.basic_identifier import BasicAsset,BasicChat
+from ._pieces_lib.pieces_os_client.wrapper.basic_identifier import BasicAsset,BasicChat,BasicMessage
+from ._pieces_lib.pieces_os_client.wrapper.client import PiecesClient
 from ._pieces_lib.pieces_os_client.wrapper.websockets import *
 from ._pieces_lib.pieces_os_client import FragmentMetadata
 
@@ -10,7 +10,7 @@ from ._version import __version__
 from .auth import Auth
 from .file_map import file_map
 from .startup import Startup
-from .utils import on_copilot_message
+from .utils import is_pieces_opened,start_pieces_os
 import os
 
 file_map_reverse = {v:k for k,v in file_map.items()}
@@ -18,7 +18,7 @@ file_map_reverse = {v:k for k,v in file_map.items()}
 
 @pynvim.plugin
 class Pieces:
-	api_client = None
+	api_client:PiecesClient
 	def __init__(self,nvim:pynvim.Nvim) -> None:
 		self.nvim = nvim
 		Settings.nvim = nvim
@@ -33,7 +33,7 @@ class Pieces:
 	@pynvim.function('PiecesCopilotSendQuestion')
 	def send_question(self,args):
 		if args[0].strip():
-			Settings.copilot.stream_question(args[0],on_copilot_message)
+			Settings.api_client.copilot.stream_question(args[0])
 
 	@pynvim.function('PiecesEditAsset')
 	def edit_asset(self,args):
@@ -50,13 +50,13 @@ class Pieces:
 	def get_message(self,args):
 		message_id = args[0]
 		try:
-			message = Settings.api_client.conversation_message_api.message_specific_message_snapshot(message=message_id,transferables=True)
-			return f"{{role = '{message.role.value}', raw = [=[{message.fragment.string.raw}]=]}}"
+			message = BasicMessage(Settings.api_client,id=message_id)
+			return f"{{role = '{message.role}', raw = [=[{message.raw_content}]=]}}"
 		except: pass
 
 	@pynvim.function("PiecesGetModel",sync=True)
 	def get_model(self,args):
-		return Settings.model_name
+		return Settings.api_client.model_name
 
 
 	@pynvim.function("PiecesCreateSnippet",sync=False)
@@ -68,13 +68,13 @@ class Pieces:
 
 	@pynvim.function("PiecesGetModels",sync=True)
 	def get_models(self,args):
-		return"{" + ", ".join(f'"{value}"' for value in Settings.models.keys()) + "}"
+		return"{" + ", ".join(f'"{value}"' for value in Settings.api_client.models.keys()) + "}"
 
 	@pynvim.function("PiecesChangeModel",sync=True)
 	def change_model(self,args):
 		model_name = args[0]
 		if model_name in self.api_client.available_models_names:
-			Settings.api_client.model_name = model_name
+			Settings.set_model_name(model_name)
 			return f"Set the current LLM model to {model_name} successfully"
 		return "Invalid Model name"
 
@@ -85,7 +85,7 @@ class Pieces:
 			except: conversation = None
 		else:
 			conversation = None
-		Settings.copilot.chat = conversation
+		Settings.api_client.copilot.chat = conversation
 
 	@pynvim.function("PiecesDeleteConversation")
 	def delete_conversation(self,args):
@@ -93,10 +93,6 @@ class Pieces:
 			BasicChat(args[0]).delete()
 		except:
 			pass
-
-	@pynvim.function("PiecesVersionCheck", sync=True)
-	def version_check(self,args):
-		return version_check()[0]
 
 	@pynvim.function("PiecesLogin", sync=True)
 	def login_function(self,args):
@@ -110,7 +106,7 @@ class Pieces:
 		path,snippet = args
 		if path:
 			if os.path.exists(path):
-				Settings.copilot.context.paths.append(path) 
+				Settings.api_client.copilot.context.paths.append(path) 
 				type = "folders" if os.path.isdir(path) else "files"
 				Settings.nvim.exec_lua(
 				    f"table.insert(require('pieces.copilot.context').context['{type}'], '{path}')"
@@ -118,7 +114,7 @@ class Pieces:
 			else:
 				Settings.nvim.err_write("Invalid paths\n")
 		if snippet:
-			Settings.copilot.context.assets.append(BasicAsset(snippet))
+			Settings.api_client.copilot.context.assets.append(BasicAsset(snippet))
 			Settings.nvim.exec_lua(
 				    f"table.insert(require('pieces.copilot.context').context['snippets'], '{snippet}')"
 				)
@@ -127,16 +123,25 @@ class Pieces:
 	@pynvim.command('PiecesHealth')
 	@is_pieces_opened
 	def get_health(self):
-		health = "OK" if Settings.get_health() else "Failed"
+		health = "OK" if Settings.api_client.health else "Failed"
 		self.nvim.out_write(f"{health}\n")
+
+	@pynvim.command("PiecesOpenPiecesOS")
+	def open_pieces(self):
+		def on_open_pieces_os():
+			self.nvim.async_call(self.nvim.out_write,"Pieces OS started successfully\n")
+			BaseWebsocket.start_all()
+		self.nvim.out_write("Opening Pieces OS\n")
+		start_pieces_os(
+			lambda: on_open_pieces_os,
+			lambda: self.nvim.async_call(self.nvim.err_write,"Could not start Pieces OS\n"))
 
 	@pynvim.command('PiecesOSVersion')
 	@is_pieces_opened
 	def get_version(self):
-		self.nvim.out_write(f"{get_version()}\n")
+		self.nvim.out_write(f"{Settings.api_client.version}\n")
 
 	@pynvim.command('PiecesPluginVersion')
-	@is_pieces_opened
 	def get_plugin_version(self):
 		self.nvim.out_write(f"{__version__}\n")
 
