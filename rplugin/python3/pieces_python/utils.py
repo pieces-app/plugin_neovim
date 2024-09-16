@@ -33,8 +33,15 @@ def on_copilot_message(message):
 		answers = message.question.answers.iterable
 
 		for answer in answers:
+			if not answer.text:
+				continue
+			text = answer.text
+			if text == "\n":
+				Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
+					require("pieces.copilot").add_line()""")
+				continue
 			Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
-				require("pieces.copilot").append_to_chat([=[{answer.text}]=],"ASSISTANT")
+				require("pieces.copilot").append_to_chat([=[{text}]=],"ASSISTANT")
 			""")
 	
 	if message.status == "COMPLETED":

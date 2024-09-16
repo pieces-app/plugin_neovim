@@ -53,7 +53,7 @@ class Copilot:
         Yields:
             QGPTStreamOutput: The streamed output from the QGPT model.
         """
-        id = self._chat.id if self._chat else None
+        id = self._chat._id if self._chat else None
         relevant = self.context._relevance_api(query) if self.context._check_relevant_existance else RelevantQGPTSeeds(iterable=[])
         self.ask_stream_ws.on_message_callback = on_message
         self.ask_stream_ws.send_message(

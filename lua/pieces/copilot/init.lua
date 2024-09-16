@@ -1,31 +1,34 @@
 local copilot_ui         = require("pieces.copilot.copilot_ui")
 local slash_commands     = require("pieces.copilot.slash_commands")
 local conversations      = require("pieces.copilot.conversations")
+local NuiPopup           = require('nui.popup')
 
 local create_input_popup = copilot_ui.create_input_popup
-local create_chat_popup  = copilot_ui.create_chat_popup
-local get_layout  = copilot_ui.layout
+local get_split  = copilot_ui.get_split
+local get_layout = copilot_ui.layout
+local input_popup, layout, chat_popup, previous_role, whole_text,completed,beginning_line,split
 
-local input_popup, layout, chat_popup, previous_role, whole_text,completed,current_line
 
+local function add_line()
+	table.insert(whole_text, "")
+end
 
 local function append_to_chat(character, role)
 	local bufnr = chat_popup.bufnr
 
 	-- Initialize `whole_text` if the role changes
 	if role ~= previous_role then
-		current_line = vim.api.nvim_buf_line_count(bufnr)
-		if current_line == 1 then
+		beginning_line = vim.api.nvim_buf_line_count(bufnr)
+		if beginning_line == 1 then
 		    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, {})
 		else
-		    current_line = current_line + 1
+		    beginning_line = beginning_line + 1
 		    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "" })
 		end
 
 		previous_role = role
 		whole_text = {role .. ": "}
 		end
-
 	if type(character) == "table" then
 		whole_text = character
 		table.insert(whole_text, 1, role .. ": " .. table.remove(whole_text, 1))
@@ -45,20 +48,23 @@ local function append_to_chat(character, role)
 
 
 	-- Set the lines in the buffer
-	vim.api.nvim_buf_set_lines(bufnr, current_line, -1, false, whole_text)
+	vim.api.nvim_buf_set_lines(bufnr, beginning_line, -1, false, whole_text)
 
 
 	local line_count = vim.api.nvim_buf_line_count(bufnr)
     vim.api.nvim_win_set_cursor(chat_popup.winid, {line_count, 0})
 end
 
-
+local function update_status_bar()
+	vim.api.nvim_win_set_option(split.winid, 'statusline', 'Pieces Model: '.. vim.fn.PiecesGetModel())
+end
 
 local function setup()
 	if layout ~= nil then
 		layout:unmount()
 	end
-	chat_popup = create_chat_popup()
+	split = get_split()
+	chat_popup = NuiPopup({buf_options = {filetype = "markdown"}})
 	conversations.set_conversation()
 	local function on_submit(value)
 		local has_non_space_string = false
@@ -86,19 +92,23 @@ local function setup()
 		end
 	end
 
-
-	-- Initial creation of the input popup
-	input_popup = create_input_popup(on_submit)
-
-	layout = get_layout(chat_popup,input_popup)
+	input_popup = create_input_popup(on_submit,chat_popup.winid)
+	layout = get_layout(split,input_popup,chat_popup)
 	layout:mount()
-	vim.api.nvim_win_set_option(layout.winid, 'statusline', 'Model: '.. vim.fn.PiecesGetModel())
-	vim.api.nvim_set_current_win(input_popup.winid)
+
+	update_status_bar()
+	vim.api.nvim_create_autocmd("ModeChanged", {
+	  pattern = "*",
+	  callback = update_status_bar,
+	})
 	slash_commands.setup_buffer(vim.api.nvim_get_current_buf())
 end
 
+
+
 return {
 	setup = setup,
+	add_line=add_line,
 	append_to_chat = append_to_chat,
 	completed = function(value) completed = value end
 }

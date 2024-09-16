@@ -1,44 +1,23 @@
 local NuiPopup  = require('nui.popup')
 local NuiLayout = require('nui.layout')
 local NuiSplit  = require('nui.split')
-local conversation = require("pieces.copilot.conversations")
 local make_buffer_read_only = require("pieces.utils").make_buffer_read_only
-local layout
-
-local function create_chat_popup()
-	local popup = NuiPopup({
-		border = {
-			highlight = "FloatBorder",
-			style = "rounded",
-			text = {
-				top = " Pieces Copilot ",
-			},
-		},
-		win_options = {
-			wrap = true,
-			linebreak = true,
-			foldcolumn = "1",
-			winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
-		},
-		buf_options = {
-			filetype = "markdown"
-		}
-	})
-
-  make_buffer_read_only(popup.bufnr)
-  return popup
-end
 
 -- Function to create an input popup
-local function create_input_popup(on_submit)
-	local prompt = "> "
+local function create_input_popup(on_submit,win_id)
 	local popup_options = {
-		relative = "window",
+		relative = {
+		  type = "win",
+		  winid = win_id,
+		},
 		position = {
-			row = 1,
+			row = "100%",
 			col = 0,
 		},
-		size = 20,
+		size = {
+			width = "100%",
+			height = "20%",
+		},
 		border = {
 			style = "rounded",
 			text = {
@@ -53,16 +32,10 @@ local function create_input_popup(on_submit)
 		buf_options = {
 			bufhidden = "wipe"
 		},
+		enter = true,
 	}
 
-	local input = NuiPopup(popup_options, {
-		prompt = prompt,
-		on_close = function()
-			layout:unmount()
-			conversation.set_conversation()
-		end,
-
-	})
+	local input = NuiPopup(popup_options)
 
 	vim.keymap.set({ "i" }, "<Enter>", function()
 		vim.api.nvim_buf_set_lines(input.bufnr, -1, -1, false, { "" })
@@ -76,16 +49,30 @@ local function create_input_popup(on_submit)
 	end, { buffer = input.bufnr })
 	return input
 end
+local function get_split()
+	local split = NuiSplit({
+		relative = "editor",
+		position = "right",
+		size = "30%",
+		win_options = {
+			wrap = true,
+			linebreak = true,
+			foldcolumn = "1",
+			winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+			number = false,
+			relativenumber = false
+		},
+		buf_options = {
+			filetype = "markdown"
+		}
+	})
+	make_buffer_read_only(split.bufnr)
+	return split
+end
 
-local function get_layout(chat_popup,input_popup)
-	-- Create a vertical layout with chat_popup and input_popup
-	layout = NuiLayout(
-		NuiSplit({
-			relative = "editor",
-			position = "right",
-			size = "30%",
-		}),
-
+local function get_layout(split,input_popup,chat_popup)
+	local layout = NuiLayout(
+		split,
 		NuiLayout.Box({
 			NuiLayout.Box({
 				NuiLayout.Box(chat_popup, { grow = 1 }),
@@ -96,8 +83,9 @@ local function get_layout(chat_popup,input_popup)
 	return layout
 end
 
+
 return {
 	create_input_popup = create_input_popup,
-	create_chat_popup = create_chat_popup,
-	layout=get_layout
+	get_split = get_split,
+	layout = get_layout,
 }
