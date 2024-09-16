@@ -1,51 +1,26 @@
-from ._pieces_lib.platformdirs import user_data_dir
 from ._pieces_lib.pieces_os_client.wrapper import PiecesClient
 from ._pieces_lib.pieces_os_client import SeededConnectorConnection,SeededTrackedApplication
 from ._version import __version__
 import pynvim
-from pathlib import Path
 import json
 import urllib.request
+import os
 
-
-class classproperty(property):
-	def __get__(self, owner_self, owner_cls):
-		return self.fget(owner_cls)
 
 class Settings:
 	# Initialize class variables
-	nvim:pynvim.Nvim = None
-	application = None
-	models = None
+	nvim:pynvim.Nvim
 	host = ""
 	is_loaded = False
 	os:str
-	pieces_data_dir = user_data_dir(appauthor="pieces", appname="neovim",ensure_exists=True)
-	settings_file = Path(pieces_data_dir, "settings.json")
+	
+	api_client:PiecesClient
 
-	@classproperty
-	def model_name(cls):
-		return cls.api_client.model_name
-
-	@model_name.setter
-	def model_name(cls,value):
+	@classmethod
+	def set_model_name(cls,value):
 		if value in cls.api_client.available_models_names:
 			cls.api_client.model_name = value
 			cls.update_settings(model_name=value)
-	
-	@classmethod
-	def get_health(cls):
-		"""
-		Retrieves the health status from the WellKnownApi and returns True if the health is 'ok', otherwise returns False.
-
-		Returns:
-		bool: True if the health status is 'ok', False otherwise.
-		"""
-		try:
-			return cls.api_client.well_known_api.get_well_known_health_with_http_info().status_code == 200
-		except:
-			pass
-		return False
 
 
 	@classmethod
@@ -67,15 +42,20 @@ class Settings:
 				cls.host = "http://127.0.0.1:5323"
 			else:
 				cls.host = "http://127.0.0.1:1000"
-		cls.api_client = PiecesClient(cls.host,config={"connect_websockets":False},
+		cls.api_client = PiecesClient(cls.host,
 			seeded_connector=SeededConnectorConnection(
 				application=SeededTrackedApplication(
 					name = "VIM",
 					platform = cls.os,
-					version = __version__)))
-		cls.models = cls.api_client.get_models()
-		cls.copilot = cls.api_client.copilot
-		cls.api_client.model_name = cls.load_settings().get("model_name","GPT-4o Chat Model")
+					version = __version__)),
+			connect_websockets=False)
+
+		cls.pieces_data_dir = cls.nvim.call('stdpath', 'data')
+		cls.plugin_dir = os.path.join(cls.pieces_data_dir, 'Pieces')
+		cls.settings_file = os.path.join(cls.plugin_dir, "settings.json")
+		if not os.path.exists(cls.plugin_dir):
+			os.makedirs(cls.plugin_dir)
+
 
 
 	@classmethod

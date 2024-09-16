@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Callable
+from typing import TYPE_CHECKING, List, Optional, Generator
 from pieces_python._pieces_lib.pieces_os_client import (SeededConversation,
     QGPTStreamInput,
     RelevantQGPTSeeds,
@@ -13,6 +13,7 @@ from .basic_identifier.chat import BasicChat
 from .streamed_identifiers.conversations_snapshot import ConversationsSnapshot
 from .websockets import AskStreamWS
 import queue
+
 
 if TYPE_CHECKING:
     from .client import PiecesClient
@@ -35,12 +36,12 @@ class Copilot:
         self.ask_stream_ws = AskStreamWS(self.pieces_client, self._on_message_queue.put)
         self.context = Context(pieces_client)
         self._chat = None
+        self._chat_id = None
 
     def stream_question(self,
             query: str,
-            on_message:Callable,
-            pipeline: Optional[QGPTPromptPipeline] = None,
-            ):
+            pipeline: Optional[QGPTPromptPipeline] = None
+            ) -> Generator[QGPTStreamOutput, None, None]:
         """
         Asks a question to the QGPT model and streams the responses.
         by default it will create a new conversation and always use it in the ask.
@@ -53,9 +54,8 @@ class Copilot:
         Yields:
             QGPTStreamOutput: The streamed output from the QGPT model.
         """
-        id = self._chat.id if self._chat else None
-        relevant = self.context._relevance_api(query) if self.context._check_relevant_existance else RelevantQGPTSeeds(iterable=[])
-        self.ask_stream_ws.on_message_callback = on_message
+        self.pieces_client._check_startup()
+        relevant = self.context._relevance_api(query) if self.context._check_relevant_existence else RelevantQGPTSeeds(iterable=[])
         self.ask_stream_ws.send_message(
             QGPTStreamInput(
                 question=QGPTQuestionInput(
@@ -65,9 +65,19 @@ class Copilot:
                     model=self.pieces_client.model_id,
                     pipeline=pipeline
                 ),
-                conversation=id,
+                conversation=self._chat_id,
             )
         )
+        return self._return_on_message()
+
+    def _return_on_message(self):
+        while True:
+            message: QGPTStreamOutput = self._on_message_queue.get()
+            if message.status != QGPTStreamEnum.IN_MINUS_PROGRESS:  # Loop only while in progress
+                yield message
+                self.chat = BasicChat(message.conversation)  # Save the conversation
+                break
+            yield message
 
 
     def question(self,
@@ -87,6 +97,7 @@ class Copilot:
         returns:
             QGPTQuestionOutput: The streamed output from the QGPT model.
         """
+        self.pieces_client._check_startup()
         gpt_input = QGPTQuestionInput(
             query = query,
             model = self.pieces_client.model_id,
@@ -97,7 +108,7 @@ class Copilot:
 
         return self.pieces_client.qgpt_api.question(gpt_input)
 
-    def chats(self) -> list[BasicChat]:
+    def chats(self) -> List[BasicChat]:
         """
         Retrieves a list of all chat identifiers.
 
@@ -115,7 +126,6 @@ class Copilot:
         Returns:
             Optional[BasicChat]: The current chat instance or None if no chat is set.
         """
-        self.context.clear() # clear the context on changing the conversation
         return self._chat
 
     @chat.setter
@@ -125,12 +135,26 @@ class Copilot:
 
         Args:
             chat (Optional[BasicChat]): The chat instance to set.
-
-        Raises:
-            ValueError: If the provided chat is not a valid BasicChat instance.
+            use chat = None if you want to create a new conversation on asking
         """
-        if not (chat is None or isinstance(chat, BasicChat)):
-            raise ValueError("Not a valid chat")
         self._chat = chat
+        self.context.clear() # clear the context on changing the conversation
+        self._chat_id = chat._id if chat else None
 
+
+    def create_chat(self, name:Optional[str]=None):
+        """
+            Creates a New Chat and change the current Copilot chat state to the new generated one
+        """
+        new_conversation = self.pieces_client.conversations_api.conversations_create_specific_conversation(
+            seeded_conversation={
+                'name': name,
+                'type': 'COPILOT',
+            }
+        )
+
+        ConversationsSnapshot.identifiers_snapshot[new_conversation.id] = new_conversation # Make sure to update the cache
+        self.chat = BasicChat(new_conversation.id)
+
+        return self.chat
 
