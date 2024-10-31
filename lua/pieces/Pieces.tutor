@@ -1,0 +1,64 @@
+# Welcome to Pieces for developers
+
+This tutorial will help you to get started with Pieces for developers
+
+### PiecesOS Installation
+
+Pieces is a required background tool to run this plugin
+inorder to be able to use this plugin install PiecesOS using `:PiecesInstall` command
+
+### Save your first snippet
+
+Go to the Visual mode and select the following snippet:
+
+~~~ cmd
+pip install pieces-cli
+~~~
+
+Run `:PiecesCreateSnippet` to create a snippet
+
+### Open your saved snippets
+
+Now, let's view all of your saved snippets using `:PiecesSnippets`
+
+Navigation and actions:
+
+- Use <Up> and <Down> arrow keys to navigate the snippet list.
+- Press <Enter> to open the selected snippet for editing.
+- Press <Del> on the selected snippet to delete it.
+- When editing a snippet:
+- Press i to enter insert mode and make changes.
+- Press <Esc> to exit insert mode.
+- Type :w and press <Enter> to save the edited snippet.
+- Type :q and press <Enter> to exit the snippet editor.
+
+
+### Chat with the Copilot
+
+You can chat with multiple LLM models using `:PiecesCopilot`
+If you want to change the LLM model write `/change_model <model_name>` in the copilot input
+Also you can manage the Copilot context using `/context`
+
+
+### Pieces Account and Personal cloud
+
+You can login to Pieces using `:PiecesLogin` then connect to the cloud using `:PiecesConnectCloud`
+
+Key features of connecting to the cloud:
+
+- Cloud backups
+- Link sharing
+- Cloud ML
+- Cloud integrations
+
+### Feedback
+
+Your feedback is very **important** to us. Please share some of your feedback by typing `:PiecesFeedback`.
+
+### Contribute
+
+The Neovim plugin is an **open source project** and you can contribute to it by creating a pull request or open an issue by typing `:PiecesContribute`.
+
+
+
+
