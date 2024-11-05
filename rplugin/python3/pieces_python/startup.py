@@ -33,7 +33,7 @@ class Startup:
 			AuthWS(Settings.api_client, Auth.on_user_callback)
 			AssetsIdentifiersWS(Settings.api_client,cls.update_lua_assets,cls.delete_lua_asset)
 			ConversationWS(Settings.api_client,cls.update_lua_conversations,cls.delete_lua_conversation)
-			HealthWS(Settings.api_client, cls.on_message, cls.on_startup, on_close=lambda x,y,z:cls.on_close).start()
+			HealthWS(Settings.api_client, cls.on_message, cls.on_startup, on_close=lambda x,y,z:cls.on_close()).start()
 
 	@classmethod
 	def on_message(cls, message):
