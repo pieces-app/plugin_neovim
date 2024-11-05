@@ -139,7 +139,7 @@ class Pieces:
 	@is_pieces_opened
 	def close_pieces_os(self):
 		Settings.api_client.os_api.os_terminate()
-		return self.nvim.out_write("Pieces os is closed\n")
+		return self.nvim.out_write("Closed PiecesOS\n")
 
 	@pynvim.command('PiecesOSVersion')
 	@is_pieces_opened
