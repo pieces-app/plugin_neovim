@@ -1,3 +1,4 @@
+import webbrowser
 import pynvim
 
 from .settings import Settings
@@ -10,7 +11,7 @@ from ._version import __version__
 from .auth import Auth
 from .file_map import file_map
 from .startup import Startup
-from .utils import is_pieces_opened,start_pieces_os
+from .utils import is_pieces_opened, start_pieces_os, install_pieces_os
 import os
 
 file_map_reverse = {v:k for k,v in file_map.items()}
@@ -119,11 +120,14 @@ class Pieces:
 				    f"table.insert(require('pieces.copilot.context').context['snippets'], '{snippet}')"
 				)
 
+	@pynvim.function('PiecesOpenLink',sync=True)
+	def open_link(self,link):
+		webbrowser.open(link)
+
 	## PYTHON COMMANDS
 	@pynvim.command('PiecesHealth')
-	@is_pieces_opened
 	def get_health(self):
-		health = "OK" if Settings.api_client.health else "Failed"
+		health = "OK" if Settings.api_client.is_pieces_running else "Failed"
 		self.nvim.out_write(f"{health}\n")
 
 	@pynvim.command("PiecesOpenPiecesOS")
@@ -164,6 +168,10 @@ class Pieces:
 	@is_pieces_opened
 	def disconnect(self):
 		self.auth.disconnect()
+
+	@pynvim.command("PiecesInstall")
+	def install(self):
+		install_pieces_os()
 
 	## LUA COMMANDS
 	@pynvim.command("PiecesSnippets")
