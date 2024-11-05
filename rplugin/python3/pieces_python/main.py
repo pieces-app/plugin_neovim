@@ -121,8 +121,8 @@ class Pieces:
 				)
 
 	@pynvim.function('PiecesOpenLink',sync=True)
-	def open_link(self,link):
-		webbrowser.open(link)
+	def open_link(self,args):
+		webbrowser.open(args[0])
 
 	## PYTHON COMMANDS
 	@pynvim.command('PiecesHealth')

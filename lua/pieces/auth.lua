@@ -48,7 +48,6 @@ local function update_content(content,default_hl)
   status_popup:map("n", '<esc>', function ()
     status_popup:unmount()
   end, { noremap = true })
-  }
 end
 
 local function create_ui(content, default_hl)
