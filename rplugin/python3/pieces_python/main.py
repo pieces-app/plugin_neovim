@@ -137,6 +137,12 @@ class Pieces:
 			lambda: on_open_pieces_os,
 			lambda: self.nvim.async_call(self.nvim.err_write,"Could not start Pieces OS\n"))
 
+	@pynvim.command("PiecesClosePiecesOS")
+	@is_pieces_opened
+	def close_pieces_os(self):
+		Settings.api_client.os_api.os_terminate()
+		return self.nvim.out_write("Pieces os is closed\n")
+
 	@pynvim.command('PiecesOSVersion')
 	@is_pieces_opened
 	def get_version(self):
