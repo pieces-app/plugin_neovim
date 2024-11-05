@@ -121,7 +121,6 @@ class Pieces:
 
 	## PYTHON COMMANDS
 	@pynvim.command('PiecesHealth')
-	@is_pieces_opened
 	def get_health(self):
 		health = "OK" if Settings.api_client.health else "Failed"
 		self.nvim.out_write(f"{health}\n")
