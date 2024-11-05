@@ -128,6 +128,7 @@ class Pieces:
 
 	@pynvim.command("PiecesOpenPiecesOS")
 	def open_pieces(self):
+		if Settings.is_loaded == True: return self.nvim.out_write("PiecesOS is already running\n")
 		def on_open_pieces_os():
 			self.nvim.async_call(self.nvim.out_write,"Pieces OS started successfully\n")
 			BaseWebsocket.start_all()
