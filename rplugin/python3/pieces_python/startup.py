@@ -35,6 +35,8 @@ class Startup:
 		health_ws = HealthWS(Settings.api_client, cls.on_message, cls.on_startup, on_close=lambda x,y,z:cls.on_close())
 		if Settings.api_client.is_pieces_running():
 			health_ws.start()
+		else:
+			Settings.is_loaded = False
 
 	@classmethod
 	def on_message(cls, message):

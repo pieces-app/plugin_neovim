@@ -12,6 +12,13 @@ local function make_buffer_read_only( bufnr )
     end})
 end
 
+local function notify_pieces_os()
+  local choice = vim.fn.confirm("PiecesOS is not currently running. To use this feature, please start PiecesOS. Would you like to launch it now?", "&Yes\n&No", 1)
+    if choice == 1 then
+      vim.cmd("PiecesOpenPiecesOS")
+    end
+end
 return {
-  make_buffer_read_only=make_buffer_read_only
+  make_buffer_read_only=make_buffer_read_only,
+  notify_pieces_os=notify_pieces_os
 }

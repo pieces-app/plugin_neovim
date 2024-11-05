@@ -122,7 +122,7 @@ class Pieces:
 	## PYTHON COMMANDS
 	@pynvim.command('PiecesHealth')
 	def get_health(self):
-		health = "OK" if Settings.api_client.health else "Failed"
+		health = "OK" if Settings.api_client.is_pieces_running() else "Failed"
 		self.nvim.out_write(f"{health}\n")
 
 	@pynvim.command("PiecesOpenPiecesOS")
@@ -131,7 +131,6 @@ class Pieces:
 		def on_open_pieces_os():
 			self.nvim.async_call(self.nvim.out_write,"Pieces OS started successfully\n")
 			BaseWebsocket.start_all()
-		self.nvim.out_write("Opening Pieces OS\n")
 		start_pieces_os(
 			lambda: on_open_pieces_os,
 			lambda: self.nvim.async_call(self.nvim.err_write,"Could not start Pieces OS\n"))

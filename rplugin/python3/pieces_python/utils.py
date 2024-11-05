@@ -73,12 +73,9 @@ def is_pieces_opened(func):
 			return func(*args, **kwargs)
 		else:
 			# Run the health request to check if the server is running
-			with concurrent.futures.ThreadPoolExecutor() as executor:
-				future = executor.submit(Settings.api_client.is_pieces_running)
-				health = future.result()
-				if health:
-					HealthWS.get_instance().start()
-					return func(*args,**kwargs)
-				else:
-					return Settings.nvim.err_write("Please make sure Pieces OS is running and updated\n")
+			if Settings.api_client.is_pieces_running():
+				HealthWS.get_instance().start()
+				return func(*args,**kwargs)
+			else:
+				return Settings.nvim.exec_lua("require('pieces.utils').notify_pieces_os()")
 	return wrapper
