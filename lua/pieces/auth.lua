@@ -45,6 +45,10 @@ local function update_content(content,default_hl)
     end
   end
   status_popup:map("n",'<Enter>' , handle_click, { noremap = true })
+  status_popup:map("n", '<esc>', function ()
+    status_popup:unmount()
+  end, { noremap = true })
+  }
 end
 
 local function create_ui(content, default_hl)
