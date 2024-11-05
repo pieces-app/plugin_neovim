@@ -1,5 +1,5 @@
+from ._pieces_lib.pieces_os_client.wrapper.websockets.health_ws import HealthWS
 from ._pieces_lib.pieces_os_client.wrapper.basic_identifier.chat import BasicChat
-from ._pieces_lib.pieces_os_client.wrapper.websockets import BaseWebsocket
 from .settings import Settings
 import concurrent.futures
 
@@ -77,7 +77,7 @@ def is_pieces_opened(func):
 				future = executor.submit(Settings.api_client.is_pieces_running)
 				health = future.result()
 				if health:
-					BaseWebsocket.start_all()
+					HealthWS.get_instance().start()
 					return func(*args,**kwargs)
 				else:
 					return Settings.nvim.err_write("Please make sure Pieces OS is running and updated\n")
