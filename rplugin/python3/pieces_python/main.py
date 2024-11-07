@@ -10,7 +10,7 @@ from ._version import __version__
 from .auth import Auth
 from .file_map import file_map
 from .startup import Startup
-from .utils import is_pieces_opened,start_pieces_os
+from .utils import is_pieces_opened
 import os
 
 file_map_reverse = {v:k for k,v in file_map.items()}

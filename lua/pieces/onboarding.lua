@@ -1,4 +1,11 @@
+local make_buffer_read_only = require("pieces.utils").make_buffer_read_only
 local M = {}
+
+local lines = {
+  "**Welcome to Pieces for Neovim!**",
+  "We're thrilled to have you join us. This step-by-step guide will help you get started with the Pieces Neovim plugin, ensuring you can integrate it into your development workflow with ease."
+}
+
 local steps = {
 [=[
 **Step 1: Check Pieces Health**
@@ -48,70 +55,51 @@ local commands = {
   "PiecesHealth",
   "PiecesOSVersion",
   "PiecesCopilot",
-  "PiecesConversation",
+  "PiecesConversations",
   "PiecesSnippets",
   "PiecesAccounts",
 }
 
+local previous_sign_line
 
-local function update_onboarding_ui(bufnr, completed_steps, current_step)
 
-  local lines = {
-    "**Welcome to Pieces for Neovim!**",
-    "We're thrilled to have you join us. This step-by-step guide will help you get started with the Pieces Neovim plugin," +
-    " ensuring you can integrate it into your development workflow with ease."
-  }
-
-  if vim.fn.PiecesOpenPiecesOS then
-    table.concat( lines, [=[
-Let's start by checking PiecesOS 
-PiecesOS is a required background service that operate the whole plugin.
-Install PiecesOS using the **:PiecesInstall**
-  ]=])
-    table.concat( commands, "PiecesInstall", 1 )
+local function update_onboarding_ui(bufnr, current_step)
+  for line in string.gmatch(steps[current_step], "([^\n]*)\n?") do
+    table.insert(lines, line)
   end
 
-  for i, step in ipairs(steps) do
-    if completed_steps[i] or i == current_step then
-      table.insert(lines, step)
-    end
+  if previous_sign_line then
+    vim.fn.sign_place(previous_sign_line, 'onboardingSigns', "PendingStep", bufnr, { lnum = previous_sign_line })
   end
+
+  previous_sign_line = vim.api.nvim_buf_line_count(bufnr)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-
-  -- Clear existing signs
-  vim.fn.sign_unplace('onboardingSigns', { buffer = bufnr })
-
-  -- Define signs for completed and pending steps
-  vim.fn.sign_define('CompletedStep', { text = '✔', texthl = 'Normal' })
-  vim.fn.sign_define('PendingStep', { text = '↻', texthl = 'Normal' })
-
-  -- Place signs in the gutter
-  for i, _ in ipairs(steps) do
-    if completed_steps[i] or i == current_step then
-      local sign_name = completed_steps[i] and 'CompletedStep' or 'PendingStep'
-      vim.fn.sign_place(i, 'onboardingSigns', sign_name, bufnr, { lnum = i + 2 })
-    end
-  end
+  vim.fn.sign_place(previous_sign_line, 'onboardingSigns', "CompletedStep", bufnr, { lnum = previous_sign_line })
 end
 
 function M.start_onboarding()
-  local completed_steps = {}
+  if vim.fn.PiecesOpenPiecesOS then
+    table.insert(steps, 1, [=[ 
+Let's start by checking PiecesOS
+PiecesOS is a required background service that operate the whole plugin.
+Install PiecesOS using the **:PiecesInstall**]=])
+    table.insert(commands, 1,"PiecesInstall")
+  end
 
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', true)
   vim.api.nvim_buf_set_option(bufnr, 'readonly', false)
+  vim.api.nvim_buf_set_option(bufnr, 'filetype', 'markdown')
+  make_buffer_read_only(bufnr)
 
-  vim.api.nvim_command('botright split') 
   vim.api.nvim_win_set_buf(0, bufnr)
-  vim.api.nvim_win_set_height(0, 15)
 
   local current_step = 1
-  update_onboarding_ui(bufnr, completed_steps, current_step)
+  update_onboarding_ui(bufnr, current_step)
 
   local function mark_step_done(index)
-    completed_steps[index] = true
     current_step = index + 1
-    update_onboarding_ui(bufnr, completed_steps, current_step)
+    update_onboarding_ui(bufnr, current_step)
   end
 
   local function prompt_next_command(index)
@@ -121,7 +109,6 @@ function M.start_onboarding()
     end
 
     local command = commands[index]
-    -- Create a new augroup
     local augroup_id = vim.api.nvim_create_augroup("PiecesOnboarding", { clear = true })
 
     vim.api.nvim_create_autocmd("CmdlineLeave", {
@@ -138,9 +125,10 @@ function M.start_onboarding()
 
   end
 
-
+  vim.fn.sign_define('CompletedStep', { text = '✔', texthl = 'Green' })
+  vim.fn.sign_define('PendingStep', { text = '↻', texthl = 'Green' })
   M.mark_step_done = mark_step_done
   prompt_next_command(1)
 end
-
+vim.api.nvim_create_user_command('PiecesOnboarding', M.start_onboarding,{})
 return M
