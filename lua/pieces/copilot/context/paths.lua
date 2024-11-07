@@ -159,7 +159,6 @@ function M.setup(item)
     }
     local input = Popup(popup_options)
     vim.api.nvim_buf_set_lines(input.bufnr, -1, -1, false, { get_closest_buff_path() })
-    print(vim.inspect(context))
     if item == "Folders" and next(context["folders"]) ~= nil then
         build_result_layout(input,context["folders"],"Folders")
     elseif item == "Files" and next(context["files"]) ~= nil then

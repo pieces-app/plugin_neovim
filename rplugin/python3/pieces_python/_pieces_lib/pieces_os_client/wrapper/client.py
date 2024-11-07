@@ -29,6 +29,7 @@ import atexit
 import subprocess
 import urllib.request
 import urllib.error
+import time
 
 from .copilot import Copilot
 from .basic_identifier import BasicAsset,BasicUser
@@ -205,7 +206,8 @@ class PiecesClient:
                 with urllib.request.urlopen(f"{self.host}/.well-known/health", timeout=1) as response:
                     return response.status == 200
             except:
-                pass
+                if maxium_retries != 1:
+                    time.sleep(1)
         return False
 
     def _check_startup(self):
