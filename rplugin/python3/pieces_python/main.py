@@ -118,6 +118,14 @@ class Pieces:
 			Settings.nvim.exec_lua(
 				    f"table.insert(require('pieces.copilot.context').context['snippets'], '{snippet}')"
 				)
+	@pynvim.function("PiecesOpenPiecesOS", sync=True)
+	def open_pieces_function(self):
+		started = self.api_client.open_pieces_os()
+		if started:
+			self.nvim.async_call(self.nvim.out_write,"Pieces OS started successfully\n")
+			BaseWebsocket.start_all()
+		else:
+			self.nvim.async_call(self.nvim.err_write,"Could not start Pieces OS\n")
 
 	## PYTHON COMMANDS
 	@pynvim.command('PiecesHealth')
@@ -128,13 +136,8 @@ class Pieces:
 
 	@pynvim.command("PiecesOpenPiecesOS")
 	def open_pieces(self):
-		def on_open_pieces_os():
-			self.nvim.async_call(self.nvim.out_write,"Pieces OS started successfully\n")
-			BaseWebsocket.start_all()
-		self.nvim.out_write("Opening Pieces OS\n")
-		start_pieces_os(
-			lambda: on_open_pieces_os,
-			lambda: self.nvim.async_call(self.nvim.err_write,"Could not start Pieces OS\n"))
+		self.open_pieces_function()
+		
 
 	@pynvim.command('PiecesOSVersion')
 	@is_pieces_opened

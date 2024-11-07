@@ -57,15 +57,6 @@ def on_copilot_message(message):
 		""")
 		return # TODO: Add a better error message
 
-def start_pieces_os(callback_sucess,callback_failed):
-	with concurrent.futures.ThreadPoolExecutor() as executor:
-		future = executor.submit(Settings.api_client.open_pieces_os)
-		started = future.result()
-		if started:
-			callback_sucess()
-		else:
-			callback_failed()
-
 
 def is_pieces_opened(func):
 	def wrapper(*args, **kwargs):
