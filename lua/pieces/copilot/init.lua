@@ -13,6 +13,22 @@ local function add_line()
 	table.insert(whole_text, "")
 end
 
+vim.api.nvim_create_autocmd("WinClosed", {
+    callback = function(args)
+        local closed_window_id = tonumber(args.match)
+        if split ~= nil and layout ~= nil and closed_window_id == split.winid then
+        	layout:unmount()
+        end
+        if layout ~= nil and split ~= nil and (
+        	closed_window_id == layout.winid or
+        	closed_window_id == input_popup.winid or
+        	closed_window_id == chat_popup.winid) then
+        	-- Check if any window is closed to close the split view
+        	split:unmount()
+        end
+    end
+})
+
 local function append_to_chat(character, role)
 	local bufnr = chat_popup.bufnr
 
@@ -56,13 +72,17 @@ local function append_to_chat(character, role)
 end
 
 local function update_status_bar()
-	vim.api.nvim_win_set_option(split.winid, 'statusline', 'Pieces Model: '.. vim.fn.PiecesGetModel())
+	if split ~= nil and type(split.winid) == "number" and vim.api.nvim_win_is_valid(split.winid) == true then
+		vim.api.nvim_win_set_option(split.winid, 'statusline', 'Pieces Model: '.. vim.fn.PiecesGetModel())
+	end
 end
 
 local function setup()
 	if layout ~= nil then
 		layout:unmount()
+		split:unmount()
 	end
+
 	split = get_split()
 	chat_popup = NuiPopup({buf_options = {filetype = "markdown"}})
 	conversations.set_conversation()
