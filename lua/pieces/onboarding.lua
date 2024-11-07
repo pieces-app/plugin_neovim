@@ -3,7 +3,8 @@ local M = {}
 
 local lines = {
   "**Welcome to Pieces for Neovim!**",
-  "We're thrilled to have you join us. This step-by-step guide will help you get started with the Pieces Neovim plugin, ensuring you can integrate it into your development workflow with ease."
+  "We're thrilled to have you join us. This step-by-step guide will help you get started with the Pieces Neovim plugin, ensuring you can integrate it into your development workflow with ease.",
+  ""
 }
 
 local steps = {
@@ -33,7 +34,7 @@ local steps = {
 [=[
 **Step 5: Manage Code Snippets**
 
-- View and manage your code snippets using **`:PiecesSnippets`** .
+- View and manage your code snippets using **`:PiecesSnippets`**.
 
   - Use <Up> and <Down> arrow keys to navigate the snippet list.
   - Press <Enter> to open the selected snippet for editing.
@@ -49,6 +50,9 @@ local steps = {
 
 - Run **`:PiecesAccount`** to Manage your Pieces account settings directly from Neovim.
 
+]=],
+[=[
+Now you are a `10x` developer using Pieces 🎉!
 ]=]
 }
 local commands = {
@@ -57,32 +61,38 @@ local commands = {
   "PiecesCopilot",
   "PiecesConversations",
   "PiecesSnippets",
-  "PiecesAccounts",
+  "PiecesAccount",
 }
 
 local previous_sign_line
 
-
 local function update_onboarding_ui(bufnr, current_step)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+  local start_line = #lines + 1
   for line in string.gmatch(steps[current_step], "([^\n]*)\n?") do
     table.insert(lines, line)
   end
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-  if previous_sign_line then
-    vim.fn.sign_place(previous_sign_line, 'onboardingSigns', "PendingStep", bufnr, { lnum = previous_sign_line })
+  vim.fn.sign_place(start_line, 'onboardingSigns', "PendingStep", bufnr, { lnum = start_line })
+
+  if previous_sign_line ~= nil then
+    vim.fn.sign_place(previous_sign_line, 'onboardingSigns', "CompletedStep", bufnr, { lnum = previous_sign_line })
   end
 
-  previous_sign_line = vim.api.nvim_buf_line_count(bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.fn.sign_place(previous_sign_line, 'onboardingSigns', "CompletedStep", bufnr, { lnum = previous_sign_line })
+  previous_sign_line = start_line
 end
 
+
 function M.start_onboarding()
+  vim.fn.sign_define('CompletedStep', { text = '✔', texthl = 'PiecesSuccessMsg' })
+  vim.fn.sign_define('PendingStep', { text = '↻', texthl = 'PiecesGreen' })
+
   if vim.fn.PiecesOpenPiecesOS then
-    table.insert(steps, 1, [=[ 
-Let's start by checking PiecesOS
+    table.insert(steps, 1, [=[Let's start by checking PiecesOS
 PiecesOS is a required background service that operate the whole plugin.
-Install PiecesOS using the **:PiecesInstall**]=])
+Install PiecesOS using the **`:PiecesInstall`**]=])
     table.insert(commands, 1,"PiecesInstall")
   end
 
@@ -97,10 +107,6 @@ Install PiecesOS using the **:PiecesInstall**]=])
   local current_step = 1
   update_onboarding_ui(bufnr, current_step)
 
-  local function mark_step_done(index)
-    current_step = index + 1
-    update_onboarding_ui(bufnr, current_step)
-  end
 
   local function prompt_next_command(index)
     if index > #steps then
@@ -115,9 +121,13 @@ Install PiecesOS using the **:PiecesInstall**]=])
       group = augroup_id,
       pattern = "*",
       callback = function()
+        if command == nil  then -- No commands are here so let's stop
+          return vim.api.nvim_clear_autocmds({ group = augroup_id })
+        end
         local current_cmdline = vim.fn.getcmdline()
         if vim.fn.getcmdtype() == ':' and current_cmdline == command then
-          mark_step_done(index)
+          current_step = index + 1
+          update_onboarding_ui(bufnr, current_step)
           prompt_next_command(index + 1)
         end
       end,
@@ -125,9 +135,6 @@ Install PiecesOS using the **:PiecesInstall**]=])
 
   end
 
-  vim.fn.sign_define('CompletedStep', { text = '✔', texthl = 'Green' })
-  vim.fn.sign_define('PendingStep', { text = '↻', texthl = 'Green' })
-  M.mark_step_done = mark_step_done
   prompt_next_command(1)
 end
 vim.api.nvim_create_user_command('PiecesOnboarding', M.start_onboarding,{})
