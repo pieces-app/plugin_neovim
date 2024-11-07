@@ -49,11 +49,7 @@ local steps = {
 **Step 6: Check your account status**
 
 - Run **`:PiecesAccount`** to Manage your Pieces account settings directly from Neovim.
-
 ]=],
-[=[
-Now you are a `10x` developer using Pieces 🎉!
-]=]
 }
 local commands = {
   "PiecesHealth",
@@ -67,19 +63,16 @@ local commands = {
 local previous_sign_line
 
 local function update_onboarding_ui(bufnr, current_step)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-
   local start_line = #lines + 1
   for line in string.gmatch(steps[current_step], "([^\n]*)\n?") do
     table.insert(lines, line)
   end
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-  vim.fn.sign_place(start_line, 'onboardingSigns', "PendingStep", bufnr, { lnum = start_line })
-
   if previous_sign_line ~= nil then
     vim.fn.sign_place(previous_sign_line, 'onboardingSigns', "CompletedStep", bufnr, { lnum = previous_sign_line })
   end
+  vim.fn.sign_place(start_line, 'onboardingSigns', "PendingStep", bufnr, { lnum = start_line })
 
   previous_sign_line = start_line
 end
@@ -121,7 +114,9 @@ Install PiecesOS using the **`:PiecesInstall`**]=])
       group = augroup_id,
       pattern = "*",
       callback = function()
-        if command == nil  then -- No commands are here so let's stop
+        if current_step <= #steps  then -- No commands are here so let's stop
+          local c = vim.api.nvim_buf_line_count(bufnr)
+          vim.api.nvim_buf_set_lines(bufnr, c, c , false, { "" ,"Now you are a `10x` developer using Pieces 🎉!"})
           return vim.api.nvim_clear_autocmds({ group = augroup_id })
         end
         local current_cmdline = vim.fn.getcmdline()
