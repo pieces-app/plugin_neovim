@@ -129,15 +129,19 @@ class Pieces:
 
 	## PYTHON COMMANDS
 	@pynvim.command('PiecesHealth')
-	@is_pieces_opened
 	def get_health(self):
-		health = "OK" if Settings.api_client.health else "Failed"
+		health = "OK" if Settings.api_client.is_pieces_running() else "Failed"
 		self.nvim.out_write(f"{health}\n")
 
 	@pynvim.command("PiecesOpenPiecesOS")
 	def open_pieces(self):
 		self.open_pieces_function()
-		
+
+	@pynvim.command("PiecesClosePiecesOS")
+	@is_pieces_opened
+	def close_pieces_os(self):
+		Settings.api_client.os_api.os_terminate()
+		return self.nvim.out_write("Closed PiecesOS\n")
 
 	@pynvim.command('PiecesOSVersion')
 	@is_pieces_opened
