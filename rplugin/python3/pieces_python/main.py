@@ -119,13 +119,12 @@ class Pieces:
 				    f"table.insert(require('pieces.copilot.context').context['snippets'], '{snippet}')"
 				)
 	@pynvim.function("PiecesOpenPiecesOS", sync=True)
-	def open_pieces_function(self):
+	def open_pieces_function(self, args = None):
+		if Settings.is_loaded: return True
 		started = self.api_client.open_pieces_os()
 		if started:
-			self.nvim.async_call(self.nvim.out_write,"Pieces OS started successfully\n")
 			BaseWebsocket.start_all()
-		else:
-			self.nvim.async_call(self.nvim.err_write,"Could not start Pieces OS\n")
+		return started
 
 	## PYTHON COMMANDS
 	@pynvim.command('PiecesHealth')
@@ -135,7 +134,9 @@ class Pieces:
 
 	@pynvim.command("PiecesOpenPiecesOS")
 	def open_pieces(self):
-		self.open_pieces_function()
+		if self.open_pieces_function():
+			return self.nvim.async_call(self.nvim.out_write,"Pieces OS started successfully\n")
+		return self.nvim.async_call(self.nvim.err_write,"Could not start Pieces OS\n")
 
 	@pynvim.command("PiecesClosePiecesOS")
 	@is_pieces_opened
