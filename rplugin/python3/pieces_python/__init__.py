@@ -1,10 +1,29 @@
 from ._version import __version__
 import pynvim
 import types
+import sys
+pip = f"{sys.executable} -m pip"
 
-outdated_message = "Seems pieces_os_client is out of date please run `pip install pieces_os_client --upgrade`\n"
+outdated_message = f"""Your 'pieces_os_client' package is out of date. 
+This may cause issues with the Pieces for Neovim plugin’s functionality. 
 
-missing_sdks_message = "Seems pieces_os_client dependency is missing. run `pip install pieces_os_client` to be able to use the plugin\n"
+To update it, please run the following command in your terminal:
+
+`{pip} install pieces_os_client --upgrade`
+
+Would you like to update it now?
+"""
+
+missing_sdks_message = f"""The 'pieces_os_client' package is missing, which is required for the Pieces for Neovim plugin to work. 
+
+To install it, run the following command:
+
+`{pip} install pieces_os_client`
+
+Would you like to install it now?
+"""
+
+
 error_message = missing_sdks_message
 
 
@@ -32,10 +51,10 @@ except ModuleNotFoundError: # Seems the sdks is not installed
 			plugin_commands = [cmd for cmd in commands if cmd.startswith("Pieces")]
 			if not plugin_commands: # If no command is registered let's register fake ones. 
 				plugin_commands = ['PiecesAccount', 'PiecesConnectCloud',
-				 	'PiecesConversations', 'PiecesCopilot','PiecesCreateSnippet',
-				  	'PiecesDisconnectCloud', 'PiecesHealth', 'PiecesLogin',
-				   	'PiecesLogout', 'PiecesOSVersion', 'PiecesOpenPiecesOS',
-				    'PiecesPluginVersion', 'PiecesSnippets'] 
+					'PiecesConversations', 'PiecesCopilot','PiecesCreateSnippet',
+					'PiecesDisconnectCloud', 'PiecesHealth', 'PiecesLogin',
+					'PiecesLogout', 'PiecesOSVersion', 'PiecesOpenPiecesOS',
+					'PiecesPluginVersion', 'PiecesSnippets'] 
 
 			for command_name in plugin_commands:
 				setattr(Pieces, command_name, self.create_dynamic_method(command_name))
@@ -59,5 +78,10 @@ except ModuleNotFoundError: # Seems the sdks is not installed
 
 		@pynvim.function("PiecesStartup")
 		def print_error_message(self,args=None):
-			self.nvim.err_write(error_message)
+			choice = self.nvim.funcs.confirm(error_message, '&Yes\n&No', 1)
+			command = f"{pip} install pieces_os_client" if error_message == missing_sdks_message else f"{pip} install pieces_os_client --upgrade"  
+			if choice == 1:
+				self.nvim.command(f"!{command}")
+
+
 
