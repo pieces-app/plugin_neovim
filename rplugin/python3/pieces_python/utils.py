@@ -1,5 +1,5 @@
-from ._pieces_lib.pieces_os_client.wrapper.basic_identifier.chat import BasicChat
-from ._pieces_lib.pieces_os_client.wrapper.websockets import BaseWebsocket
+from pieces_os_client.wrapper.basic_identifier.chat import BasicChat
+from pieces_os_client.wrapper.websockets import BaseWebsocket
 from .settings import Settings
 import concurrent.futures
 
