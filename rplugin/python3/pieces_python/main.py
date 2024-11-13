@@ -5,7 +5,6 @@ from .settings import Settings
 from ._pieces_lib.pieces_os_client.wrapper.basic_identifier import BasicAsset,BasicChat,BasicMessage
 from ._pieces_lib.pieces_os_client.wrapper.client import PiecesClient
 from ._pieces_lib.pieces_os_client.wrapper.websockets import *
-from ._pieces_lib.pieces_os_client import FragmentMetadata
 
 from ._version import __version__
 from .auth import Auth
