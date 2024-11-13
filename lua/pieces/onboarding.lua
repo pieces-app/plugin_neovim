@@ -1,5 +1,21 @@
 local make_buffer_read_only = require("pieces.utils").make_buffer_read_only
 local M = {}
+local welcoming = {}
+for line in string.gmatch([=[
+```
+    ____  _                        ____              _   __                _         
+   / __ \(_)__  ________  _____   / __/___  _____   / | / /__  ____ _   __(_)___ ___ 
+  / /_/ / / _ \/ ___/ _ \/ ___/  / /_/ __ \/ ___/  /  |/ / _ \/ __ \ | / / / __ `__ \
+ / ____/ /  __/ /__/  __(__  )  / __/ /_/ / /     / /|  /  __/ /_/ / |/ / / / / / / /
+/_/   /_/\___/\___/\___/____/  /_/  \____/_/     /_/ |_/\___/\____/|___/_/_/ /_/ /_/ 
+
+```
+We're thrilled to have you join us. This step-by-step guide will help you get started with the Pieces Neovim plugin, ensuring you can integrate it into your development workflow with ease.
+
+]=], "([^\n]*)\n?") do
+    table.insert(welcoming, line)
+end
+
 
 local steps = {
 [=[
@@ -57,7 +73,7 @@ pip3 install pieces-cli
 }
 
 local commands = {
-  "PiecesCreateSnippet",
+  "'<,'>PiecesCreateSnippet",
   "PiecesSnippets",
   "PiecesCopilot",
   "PiecesConversations",
@@ -90,12 +106,7 @@ function M.start_onboarding()
   else
     bufnr = vim.api.nvim_create_buf(false, true)
   end
-
-  lines = {
-    "**Welcome to Pieces for Neovim!**",
-    "We're thrilled to have you join us. This step-by-step guide will help you get started with the Pieces Neovim plugin, ensuring you can integrate it into your development workflow with ease.",
-    ""
-  }
+  lines = welcoming
   previous_sign_line = nil
   vim.fn.sign_define('CompletedStep', { text = '✔', texthl = 'PiecesSuccessMsg' })
   vim.fn.sign_define('PendingStep', { text = '↻', texthl = 'PiecesGreen' })
@@ -138,7 +149,7 @@ Install PiecesOS using the **`:PiecesInstall`**]=])
           return vim.api.nvim_clear_autocmds({ group = augroup_id })
         end
         local current_cmdline = vim.fn.getcmdline()
-        if vim.fn.getcmdtype() == ':' and current_cmdline == command then
+        if current_cmdline == command then
           current_step = index + 1
           update_onboarding_ui(current_step)
           prompt_next_command(index + 1)
