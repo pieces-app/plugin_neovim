@@ -1,3 +1,4 @@
+import webbrowser
 import pynvim
 
 from .settings import Settings
@@ -11,6 +12,7 @@ from .auth import Auth
 from .file_map import file_map
 from .startup import Startup
 from .utils import is_pieces_opened
+from .utils import is_pieces_opened, install_pieces_os
 import os
 
 file_map_reverse = {v:k for k,v in file_map.items()}
@@ -126,6 +128,10 @@ class Pieces:
 			BaseWebsocket.start_all()
 		return started
 
+	@pynvim.function('PiecesOpenLink',sync=True)
+	def open_link(self,args):
+		webbrowser.open(args[0])
+
 	## PYTHON COMMANDS
 	@pynvim.command('PiecesHealth')
 	def get_health(self):
@@ -172,6 +178,10 @@ class Pieces:
 	@is_pieces_opened
 	def disconnect(self):
 		self.auth.disconnect()
+
+	@pynvim.command("PiecesInstall")
+	def install(self):
+		install_pieces_os()
 
 	## LUA COMMANDS
 	@pynvim.command("PiecesSnippets")

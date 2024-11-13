@@ -2,6 +2,8 @@ from ._pieces_lib.pieces_os_client.wrapper.websockets.health_ws import HealthWS
 from ._pieces_lib.pieces_os_client.wrapper.basic_identifier.chat import BasicChat
 from .settings import Settings
 import concurrent.futures
+import os
+import webbrowser
 
 def convert_to_lua_table(python_dict):
 	"""
@@ -70,3 +72,30 @@ def is_pieces_opened(func):
 			else:
 				return Settings.nvim.exec_lua("require('pieces.utils').notify_pieces_os()")
 	return wrapper
+
+
+
+def install_pieces_os():
+    """
+    Install Pieces OS based on the platform
+    """
+    
+    if Settings.api_client.local_os == "WINDOWS":
+        webbrowser.open(f"https://builds.pieces.app/stages/production/appinstaller/os_server.appinstaller?product={Settings.api_client.tracked_application.name.value}&download=true")
+
+    elif Settings.api_client.local_os == "LINUX":
+        webbrowser.open("https://snapcraft.io/pieces-os")
+        return
+    
+    elif Settings.api_client.local_os == "MACOS":
+        arch = os.uname().machine
+        pkg_url = (
+            "https://builds.pieces.app/stages/production/macos_packaging/pkg-pos-launch-only"
+            f"{'-arm64' if arch == 'arm64' else ''}/download?product={Settings.api_client.tracked_application.name.value}&download=true"
+        )
+        webbrowser.open(pkg_url)
+    
+    else:
+        raise ValueError("Invalid platform")
+
+
