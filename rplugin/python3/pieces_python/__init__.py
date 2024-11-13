@@ -16,7 +16,7 @@ try:
 		update_sdks()
 		raise ModuleNotFoundError
 
-	if VersionChecker.compare(pieces_os_client_version,"4.0.0") < 0: # We need to be above 4.0.0
+	if VersionChecker.compare(pieces_os_client_version,"4.0.3") < 0: # We need to be above 4.0.0
 		update_sdks()
 		raise ModuleNotFoundError
 	from .main import Pieces
