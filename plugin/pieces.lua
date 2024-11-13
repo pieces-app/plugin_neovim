@@ -1,5 +1,6 @@
 require("pieces.copilot")
 require("pieces.assets")
 require("pieces.copilot.slash_commands")
+require("pieces.onboarding")
 require("pieces.feedback")
 require("pieces.tutor")

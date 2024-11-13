@@ -5,13 +5,13 @@ from .settings import Settings
 from ._pieces_lib.pieces_os_client.wrapper.basic_identifier import BasicAsset,BasicChat,BasicMessage
 from ._pieces_lib.pieces_os_client.wrapper.client import PiecesClient
 from ._pieces_lib.pieces_os_client.wrapper.websockets import *
-from ._pieces_lib.pieces_os_client import FragmentMetadata
 
 from ._version import __version__
 from .auth import Auth
 from .file_map import file_map
 from .startup import Startup
-from .utils import is_pieces_opened, start_pieces_os, install_pieces_os
+from .utils import is_pieces_opened
+from .utils import is_pieces_opened, install_pieces_os
 import os
 
 file_map_reverse = {v:k for k,v in file_map.items()}
@@ -119,6 +119,13 @@ class Pieces:
 			Settings.nvim.exec_lua(
 				    f"table.insert(require('pieces.copilot.context').context['snippets'], '{snippet}')"
 				)
+	@pynvim.function("PiecesOpenPiecesOS", sync=True)
+	def open_pieces_function(self, args = None):
+		if Settings.is_loaded: return True
+		started = self.api_client.open_pieces_os()
+		if started:
+			BaseWebsocket.start_all()
+		return started
 
 	@pynvim.function('PiecesOpenLink',sync=True)
 	def open_link(self,args):
@@ -132,13 +139,9 @@ class Pieces:
 
 	@pynvim.command("PiecesOpenPiecesOS")
 	def open_pieces(self):
-		if Settings.is_loaded == True: return self.nvim.out_write("PiecesOS is already running\n")
-		def on_open_pieces_os():
-			self.nvim.async_call(self.nvim.out_write,"Pieces OS started successfully\n")
-			BaseWebsocket.start_all()
-		start_pieces_os(
-			lambda: on_open_pieces_os,
-			lambda: self.nvim.async_call(self.nvim.err_write,"Could not start Pieces OS\n"))
+		if self.open_pieces_function():
+			return self.nvim.async_call(self.nvim.out_write,"Pieces OS started successfully\n")
+		return self.nvim.async_call(self.nvim.err_write,"Could not start Pieces OS\n")
 
 	@pynvim.command("PiecesClosePiecesOS")
 	@is_pieces_opened
