@@ -12,11 +12,14 @@ function! PiecesRunRemotePlugins()
     echohl None
 endfunction
 
+
 function! RunPiecesStartup()
     try
         call PiecesStartup()
     catch /^Vim\%((\a\+)\)\=:E/
-        call PiecesRunRemotePlugins()
+        echohl WarningMsg
+        echomsg 'Seems there is an issue with the python environment or you forgot to run :UpdateRemotePlugins, Feel free to open a discussion on the GitHub repo https://github.com/pieces-app/plugin_neovim/discussions'
+        echohl None
     endtry
 endfunction
 

@@ -1,3 +1,4 @@
+import webbrowser
 import pynvim
 
 from .settings import Settings
@@ -118,23 +119,35 @@ class Pieces:
 			Settings.nvim.exec_lua(
 				    f"table.insert(require('pieces.copilot.context').context['snippets'], '{snippet}')"
 				)
+	@pynvim.function("PiecesOpenPiecesOS", sync=True)
+	def open_pieces_function(self, args = None):
+		if Settings.is_loaded: return True
+		started = self.api_client.open_pieces_os()
+		if started:
+			BaseWebsocket.start_all()
+		return started
+
+	@pynvim.function('PiecesOpenLink',sync=True)
+	def open_link(self,args):
+		webbrowser.open(args[0])
 
 	## PYTHON COMMANDS
 	@pynvim.command('PiecesHealth')
-	@is_pieces_opened
 	def get_health(self):
-		health = "OK" if Settings.api_client.health else "Failed"
+		health = "OK" if Settings.api_client.is_pieces_running() else "Failed"
 		self.nvim.out_write(f"{health}\n")
 
 	@pynvim.command("PiecesOpenPiecesOS")
 	def open_pieces(self):
-		def on_open_pieces_os():
-			self.nvim.async_call(self.nvim.out_write,"Pieces OS started successfully\n")
-			BaseWebsocket.start_all()
-		self.nvim.out_write("Opening Pieces OS\n")
-		start_pieces_os(
-			lambda: on_open_pieces_os,
-			lambda: self.nvim.async_call(self.nvim.err_write,"Could not start Pieces OS\n"))
+		if self.open_pieces_function():
+			return self.nvim.async_call(self.nvim.out_write,"Pieces OS started successfully\n")
+		return self.nvim.async_call(self.nvim.err_write,"Could not start Pieces OS\n")
+
+	@pynvim.command("PiecesClosePiecesOS")
+	@is_pieces_opened
+	def close_pieces_os(self):
+		Settings.api_client.os_api.os_terminate()
+		return self.nvim.out_write("Closed PiecesOS\n")
 
 	@pynvim.command('PiecesOSVersion')
 	@is_pieces_opened
@@ -164,6 +177,10 @@ class Pieces:
 	@is_pieces_opened
 	def disconnect(self):
 		self.auth.disconnect()
+
+	@pynvim.command("PiecesInstall")
+	def install(self):
+		install_pieces_os()
 
 	## LUA COMMANDS
 	@pynvim.command("PiecesSnippets")

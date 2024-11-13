@@ -34,11 +34,14 @@ class Startup:
 				Settings.nvim.command('echohl None')
 		except:  # Internet issues or status code is not 200
 			pass
-		if Settings.api_client.is_pieces_running:
-			AuthWS(Settings.api_client, Auth.on_user_callback)
-			AssetsIdentifiersWS(Settings.api_client,cls.update_lua_assets,cls.delete_lua_asset)
-			ConversationWS(Settings.api_client,cls.update_lua_conversations,cls.delete_lua_conversation)
-			HealthWS(Settings.api_client, cls.on_message, cls.on_startup, on_close=lambda x,y,z:cls.on_close).start()
+		AuthWS(Settings.api_client, Auth.on_user_callback)
+		AssetsIdentifiersWS(Settings.api_client,cls.update_lua_assets,cls.delete_lua_asset)
+		ConversationWS(Settings.api_client,cls.update_lua_conversations,cls.delete_lua_conversation)
+		health_ws = HealthWS(Settings.api_client, cls.on_message, cls.on_startup, on_close=lambda x,y,z:cls.on_close())
+		if Settings.api_client.is_pieces_running():
+			health_ws.start()
+		else:
+			Settings.is_loaded = False
 
 	@classmethod
 	def on_message(cls, message):
@@ -46,7 +49,6 @@ class Startup:
 			Settings.is_loaded = True
 		else:
 			Settings.is_loaded = False
-			Settings.nvim.async_call(Settings.nvim.err_write, "Please make sure Pieces OS is running\n")
 
 	@classmethod
 	def on_startup(cls, ws):
