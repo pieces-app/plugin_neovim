@@ -52,14 +52,9 @@ Key features of connecting to the cloud:
 - Cloud ML
 - Cloud integrations
 
-### Feedback
+### Pieces Onboarding
 
-Your feedback is very **important** to us. Please share some of your feedback by typing `:PiecesFeedback`{normal}.
-
-### Contribute
-
-The Neovim plugin is an **open source project** and you can contribute to it by creating a pull request or open an issue by typing `:PiecesContribute`{normal}.
-
+You can use `:PiecesOnboarding` to get you onboarded and know much more commands :)
 ]=]
 
 -- Function to check for a file and create it if it doesn't exist
