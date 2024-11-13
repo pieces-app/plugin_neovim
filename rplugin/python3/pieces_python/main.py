@@ -7,7 +7,7 @@ from pieces_os_client.wrapper.client import PiecesClient
 from pieces_os_client.wrapper.websockets import BaseWebsocket
 from pieces_os_client.models.fragment_metadata import FragmentMetadata
 from .startup import Startup
-from .utils import is_pieces_opened,start_pieces_os
+from .utils import is_pieces_opened, install_pieces_os
 from .auth import Auth
 
 from ._version import __version__

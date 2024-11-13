@@ -17,7 +17,7 @@ from .file_map import file_map
 from .utils import on_copilot_message
 
 
-PIECES_OS_MIN_VERSION = "10.1.3"  # Minium version (10.0.0)
+PIECES_OS_MIN_VERSION = "10.1.12"  # Minium version (10.1.12)
 PIECES_OS_MAX_VERSION = "11.0.0" # Maxium version (11.0.0)
 
 class Startup:

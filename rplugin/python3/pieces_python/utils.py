@@ -1,8 +1,6 @@
 from pieces_os_client.wrapper.basic_identifier.chat import BasicChat
-from pieces_os_client.wrapper.websockets import BaseWebsocket
-from pieces_os_client.wrapper.webbrowser import HealthWS
+from pieces_os_client.wrapper.websockets import HealthWS
 from .settings import Settings
-import concurrent.futures
 import os
 import webbrowser
 
