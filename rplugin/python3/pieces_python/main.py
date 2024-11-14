@@ -2,16 +2,16 @@ import webbrowser
 import pynvim
 
 from .settings import Settings
-from ._pieces_lib.pieces_os_client.wrapper.basic_identifier import BasicAsset,BasicChat,BasicMessage
-from ._pieces_lib.pieces_os_client.wrapper.client import PiecesClient
-from ._pieces_lib.pieces_os_client.wrapper.websockets import *
+from pieces_os_client.wrapper.basic_identifier import BasicAsset,BasicChat,BasicMessage
+from pieces_os_client.wrapper.client import PiecesClient
+from pieces_os_client.wrapper.websockets import BaseWebsocket
+from pieces_os_client.models.fragment_metadata import FragmentMetadata
+from .startup import Startup
+from .utils import is_pieces_opened, install_pieces_os
+from .auth import Auth
 
 from ._version import __version__
-from .auth import Auth
 from .file_map import file_map
-from .startup import Startup
-from .utils import is_pieces_opened
-from .utils import is_pieces_opened, install_pieces_os
 import os
 
 file_map_reverse = {v:k for k,v in file_map.items()}

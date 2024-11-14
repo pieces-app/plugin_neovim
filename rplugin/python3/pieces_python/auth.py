@@ -1,4 +1,4 @@
-from ._pieces_lib.pieces_os_client import UserProfile
+from pieces_os_client.models.user_profile import UserProfile
 from typing import Optional
 from .settings import Settings
 import concurrent.futures
