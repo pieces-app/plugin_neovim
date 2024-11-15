@@ -7,7 +7,7 @@
 - Feat: `:PiecesFeedback`
 - Feat: `:PiecesClosePiecesOS`
 - Feat: `:PiecesInstall`
-- Fix: showing an error every buffer enter when you close the Copilot
+- Fix: showing an error every time you switch to insert mode after closing the Copilot
 - Fix: when closing the Copilot the split window is closed with it
 - Fix: showing "Could not start PiecesOS" even if it is started
 - Fix: Handling `:PiecesLogout` if the user is already Logged out
