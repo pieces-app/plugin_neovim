@@ -1,5 +1,6 @@
-from ._pieces_lib.pieces_os_client.wrapper import PiecesClient
-from ._pieces_lib.pieces_os_client import SeededConnectorConnection,SeededTrackedApplication
+from pieces_os_client.wrapper import PiecesClient
+from pieces_os_client.models.seeded_connector_connection import SeededConnectorConnection
+from pieces_os_client.models.seeded_tracked_application import SeededTrackedApplication
 from ._version import __version__
 import pynvim
 import json
