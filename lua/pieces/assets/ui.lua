@@ -64,8 +64,8 @@ local function on_input(input)
 	for i, result in ipairs(snippets_search_results) do
 		local start_idx, end_idx = result.name:lower():find(input:lower())
 		if start_idx and end_idx then
-			vim.api.nvim_buf_add_highlight(results_popup.bufnr, -1, 'Search', i - 1, start_idx - 1,
-				end_idx)
+			vim.api.nvim_buf_add_highlight(results_popup.bufnr, -1, 'Search', i - 1, start_idx + 3,
+				end_idx + 4)
 		end
 	end
 end
@@ -158,6 +158,8 @@ function M.setup()
 	updater.results_popup = results_popup -- Update the new result popup
 	layout:mount()
 	vim.api.nvim_set_current_win(results_popup.winid)
+	snippets_search_results = snippets.snippets
+	updater.items = snippets_search_results
 	updater:setup()
 end
 

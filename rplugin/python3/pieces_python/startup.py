@@ -60,6 +60,7 @@ class Startup:
 				Settings.update_settings(version=__version__)
 			if Settings.load_settings().get("version") != __version__:
 				Settings.nvim.async_call(Settings.nvim.command, 'call PiecesRunRemotePlugins()')
+				Settings.update_settings(version = __version__)
 
 			Settings.api_client.model_name = Settings.load_settings().get("model_name","GPT-4o Chat Model")
 			BaseWebsocket.start_all()
