@@ -12,7 +12,6 @@ class Settings:
 	# Initialize class variables
 	nvim:pynvim.Nvim
 	host = ""
-	is_loaded = False
 	os:str
 	
 	api_client:PiecesClient
@@ -38,12 +37,7 @@ class Settings:
 
 			setattr(cls,config,out) # Setting up the host and the os
 
-		if not cls.host:
-			if 'linux' == cls.os:
-				cls.host = "http://127.0.0.1:5323"
-			else:
-				cls.host = "http://127.0.0.1:1000"
-		cls.api_client = PiecesClient(cls.host,
+		cls.api_client = PiecesClient(
 			seeded_connector=SeededConnectorConnection(
 				application=SeededTrackedApplication(
 					name = "VIM",

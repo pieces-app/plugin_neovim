@@ -61,7 +61,7 @@ def on_copilot_message(message):
 
 def is_pieces_opened(func):
 	def wrapper(*args, **kwargs):
-		if Settings.is_loaded:
+		if Settings.api_client.is_pos_stream_running:
 			return func(*args, **kwargs)
 		else:
 			# Run the health request to check if the server is running

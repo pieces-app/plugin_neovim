@@ -121,7 +121,7 @@ class Pieces:
 				)
 	@pynvim.function("PiecesOpenPiecesOS", sync=True)
 	def open_pieces_function(self, args = None):
-		if Settings.is_loaded: return True
+		if Settings.api_client.is_pos_stream_running: return True
 		started = self.api_client.open_pieces_os()
 		if started:
 			BaseWebsocket.start_all()

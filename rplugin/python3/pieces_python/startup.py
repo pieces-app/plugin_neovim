@@ -37,18 +37,13 @@ class Startup:
 		AuthWS(Settings.api_client, Auth.on_user_callback)
 		AssetsIdentifiersWS(Settings.api_client,cls.update_lua_assets,cls.delete_lua_asset)
 		ConversationWS(Settings.api_client,cls.update_lua_conversations,cls.delete_lua_conversation)
-		health_ws = HealthWS(Settings.api_client, cls.on_message, cls.on_startup, on_close=lambda x,y,z:cls.on_close())
+		health_ws = HealthWS(Settings.api_client, cls.on_message, cls.on_startup)
 		if Settings.api_client.is_pieces_running():
 			health_ws.start()
-		else:
-			Settings.is_loaded = False
 
 	@classmethod
 	def on_message(cls, message):
-		if message == "OK":
-			Settings.is_loaded = True
-		else:
-			Settings.is_loaded = False
+		pass
 
 	@classmethod
 	def on_startup(cls, ws):
@@ -66,14 +61,10 @@ class Startup:
 			Settings.api_client.copilot.ask_stream_ws.on_message_callback = on_copilot_message
 			Settings.api_client.copilot._return_on_message = lambda: None
 		else:
-			Settings.is_loaded = False
 			BaseWebsocket.close_all()
 			plugin = "Pieces OS" if result.update == UpdateEnum.PiecesOS else "the Neovim Pieces plugin"
 			Settings.nvim.async_call(Settings.nvim.err_write, f"Please update {plugin}\n")
 	
-	@staticmethod
-	def on_close():
-		Settings.is_loaded = False
 
 	@classmethod
 	def update_lua_assets(cls,asset:Asset):
