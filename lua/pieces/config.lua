@@ -17,11 +17,6 @@ end
 local config = {}
 
 config.os = get_os()
-if config.os == "WINDOW" or config.os == "MACOS" then
-	config.host = "http://localhost:1000"
-else
-	config.host = "http://localhost:5323"
-end
 
 
 

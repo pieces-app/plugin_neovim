@@ -1,8 +1,12 @@
 from pieces_os_client.wrapper.basic_identifier.chat import BasicChat
 from pieces_os_client.wrapper.websockets import HealthWS
+from pieces_os_client.wrapper.version_compatibility import UpdateEnum, VersionChecker
 from .settings import Settings
 import os
 import webbrowser
+
+PIECES_OS_MIN_VERSION = "11.0.0"  # Minium version (11.0.0)
+PIECES_OS_MAX_VERSION = "12.0.0" # Maxium version (12.0.0)
 
 def convert_to_lua_table(python_dict):
 	"""
@@ -58,10 +62,30 @@ def on_copilot_message(message):
 		""")
 		return # TODO: Add a better error message
 
+def check_compatibility(notify_if_pos_off = False):
+	if not Settings.version_compatibility:
+		if not Settings.api_client.is_pieces_running():
+			if notify_if_pos_off: Settings.nvim.exec_lua("require('pieces.utils').notify_pieces_os()")
+			return False
+
+		Settings.version_compatibility = VersionChecker(
+			PIECES_OS_MIN_VERSION,
+			PIECES_OS_MAX_VERSION,
+			Settings.api_client.version).version_check()
+
+	if not Settings.version_compatibility.compatible:
+		plugin = "Pieces OS" if Settings.version_compatibility.update == UpdateEnum.PiecesOS else "the Neovim Pieces plugin"
+		Settings.nvim.async_call(Settings.nvim.err_write, f"Please update {plugin}\n")
+		return False
+	else: 
+		return True
 
 def is_pieces_opened(func):
 	def wrapper(*args, **kwargs):
-		if Settings.is_loaded:
+		if not check_compatibility(True):
+			return
+
+		if Settings.api_client.is_pos_stream_running:
 			return func(*args, **kwargs)
 		else:
 			# Run the health request to check if the server is running

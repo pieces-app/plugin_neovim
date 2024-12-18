@@ -5,7 +5,7 @@ import pip
 def update_sdks():
 	pip.main(["install","pieces_os_client","--upgrade"])
 
-
+MIN_SDKS_VERSION = "4.1.0"
 try:
 	from pieces_os_client import __version__ as pieces_os_client_version
 
@@ -16,7 +16,7 @@ try:
 		update_sdks()
 		raise ModuleNotFoundError
 
-	if VersionChecker.compare(pieces_os_client_version,"4.0.3") < 0: # We need to be above 4.0.0
+	if VersionChecker.compare(pieces_os_client_version,MIN_SDKS_VERSION) < 0: # We need to be above 4.0.0
 		update_sdks()
 		raise ModuleNotFoundError
 	from .main import Pieces

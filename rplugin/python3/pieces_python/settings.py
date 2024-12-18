@@ -1,6 +1,8 @@
+from typing import Optional
 from pieces_os_client.wrapper import PiecesClient
 from pieces_os_client.models.seeded_connector_connection import SeededConnectorConnection
 from pieces_os_client.models.seeded_tracked_application import SeededTrackedApplication
+from pieces_os_client.wrapper.version_compatibility import VersionCheckResult
 from ._version import __version__
 import pynvim
 import json
@@ -8,14 +10,15 @@ import urllib.request
 import os
 
 
+
 class Settings:
 	# Initialize class variables
 	nvim:pynvim.Nvim
 	host = ""
-	is_loaded = False
 	os:str
 	
 	api_client:PiecesClient
+	version_compatibility: Optional[VersionCheckResult] = None
 
 	@classmethod
 	def set_model_name(cls,value):
@@ -38,12 +41,7 @@ class Settings:
 
 			setattr(cls,config,out) # Setting up the host and the os
 
-		if not cls.host:
-			if 'linux' == cls.os:
-				cls.host = "http://127.0.0.1:5323"
-			else:
-				cls.host = "http://127.0.0.1:1000"
-		cls.api_client = PiecesClient(cls.host,
+		cls.api_client = PiecesClient(
 			seeded_connector=SeededConnectorConnection(
 				application=SeededTrackedApplication(
 					name = "VIM",

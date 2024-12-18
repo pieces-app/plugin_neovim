@@ -14,11 +14,10 @@ from pieces_os_client.wrapper.streamed_identifiers import (
 from pieces_os_client.models.conversation import Conversation
 from pieces_os_client.models.asset import Asset
 from .file_map import file_map
-from .utils import on_copilot_message
+from .utils import check_compatibility, on_copilot_message
 
 
-PIECES_OS_MIN_VERSION = "10.1.12"  # Minium version (10.1.12)
-PIECES_OS_MAX_VERSION = "11.0.0" # Maxium version (11.0.0)
+
 
 class Startup:
 	@classmethod
@@ -37,44 +36,37 @@ class Startup:
 		AuthWS(Settings.api_client, Auth.on_user_callback)
 		AssetsIdentifiersWS(Settings.api_client,cls.update_lua_assets,cls.delete_lua_asset)
 		ConversationWS(Settings.api_client,cls.update_lua_conversations,cls.delete_lua_conversation)
-		health_ws = HealthWS(Settings.api_client, cls.on_message, cls.on_startup, on_close=lambda x,y,z:cls.on_close())
+		health_ws = HealthWS(Settings.api_client, cls.on_message, cls.on_startup,on_close=lambda x,y,z: cls.on_close())
 		if Settings.api_client.is_pieces_running():
 			health_ws.start()
-		else:
-			Settings.is_loaded = False
 
 	@classmethod
 	def on_message(cls, message):
-		if message == "OK":
-			Settings.is_loaded = True
-		else:
-			Settings.is_loaded = False
+		pass
+
+	@staticmethod
+	def on_close():
+		Settings.api_client.is_pos_stream_running = False
 
 	@classmethod
 	def on_startup(cls, ws):
-		result = VersionChecker(PIECES_OS_MIN_VERSION,
-			PIECES_OS_MAX_VERSION,
-			Settings.api_client.version).version_check()
-		if result.compatible:
+		compatiable = check_compatibility()
+		if compatiable:
 			if not Settings.load_settings().get("version"):
 				Settings.update_settings(version=__version__)
+
 			if Settings.load_settings().get("version") != __version__:
 				Settings.nvim.async_call(Settings.nvim.command, 'call PiecesRunRemotePlugins()')
 				Settings.update_settings(version = __version__)
+
 
 			Settings.api_client.model_name = Settings.load_settings().get("model_name","GPT-4o Chat Model")
 			BaseWebsocket.start_all()
 			Settings.api_client.copilot.ask_stream_ws.on_message_callback = on_copilot_message
 			Settings.api_client.copilot._return_on_message = lambda: None
 		else:
-			Settings.is_loaded = False
 			BaseWebsocket.close_all()
-			plugin = "Pieces OS" if result.update == UpdateEnum.PiecesOS else "the Neovim Pieces plugin"
-			Settings.nvim.async_call(Settings.nvim.err_write, f"Please update {plugin}\n")
 	
-	@staticmethod
-	def on_close():
-		Settings.is_loaded = False
 
 	@classmethod
 	def update_lua_assets(cls,asset:Asset):
