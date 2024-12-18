@@ -1,6 +1,7 @@
 from pieces_os_client.wrapper import PiecesClient
 from pieces_os_client.models.seeded_connector_connection import SeededConnectorConnection
 from pieces_os_client.models.seeded_tracked_application import SeededTrackedApplication
+from pieces_os_client.wrapper.version_compatibility import VersionCheckResult
 from ._version import __version__
 import pynvim
 import json
@@ -15,6 +16,7 @@ class Settings:
 	os:str
 	
 	api_client:PiecesClient
+	version_compatibility: VersionCheckResult
 
 	@classmethod
 	def set_model_name(cls,value):

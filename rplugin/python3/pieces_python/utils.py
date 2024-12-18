@@ -1,5 +1,6 @@
 from pieces_os_client.wrapper.basic_identifier.chat import BasicChat
 from pieces_os_client.wrapper.websockets import HealthWS
+from pieces_os_client.wrapper.version_compatibility import UpdateEnum
 from .settings import Settings
 import os
 import webbrowser
@@ -61,6 +62,11 @@ def on_copilot_message(message):
 
 def is_pieces_opened(func):
 	def wrapper(*args, **kwargs):
+		if Settings.version_compatibility:
+			plugin = "Pieces OS" if Settings.version_compatibility.update == UpdateEnum.PiecesOS else "the Neovim Pieces plugin"
+			Settings.nvim.async_call(Settings.nvim.err_write, f"Please update {plugin}\n")
+			return
+
 		if Settings.api_client.is_pos_stream_running:
 			return func(*args, **kwargs)
 		else:

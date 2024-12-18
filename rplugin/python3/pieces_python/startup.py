@@ -47,10 +47,10 @@ class Startup:
 
 	@classmethod
 	def on_startup(cls, ws):
-		result = VersionChecker(PIECES_OS_MIN_VERSION,
+		Settings.version_compatibility = VersionChecker(PIECES_OS_MIN_VERSION,
 			PIECES_OS_MAX_VERSION,
 			Settings.api_client.version).version_check()
-		if result.compatible:
+		if Settings.version_compatibility.compatible:
 			if not Settings.load_settings().get("version"):
 				Settings.update_settings(version=__version__)
 			if Settings.load_settings().get("version") != __version__:
@@ -62,7 +62,7 @@ class Startup:
 			Settings.api_client.copilot._return_on_message = lambda: None
 		else:
 			BaseWebsocket.close_all()
-			plugin = "Pieces OS" if result.update == UpdateEnum.PiecesOS else "the Neovim Pieces plugin"
+			plugin = "Pieces OS" if Settings.version_compatibility.update == UpdateEnum.PiecesOS else "the Neovim Pieces plugin"
 			Settings.nvim.async_call(Settings.nvim.err_write, f"Please update {plugin}\n")
 	
 
