@@ -183,7 +183,7 @@ class Pieces:
 		install_pieces_os()
 
 	## LUA COMMANDS
-	@pynvim.command("PiecesSnippets")
+	@pynvim.command("PiecesDrive")
 	@is_pieces_opened
 	def open_snippets(self):
 		self.nvim.exec_lua("require('pieces.assets').setup()")
@@ -194,7 +194,7 @@ class Pieces:
 	def open_copilot(self):
 		self.nvim.exec_lua("require('pieces.copilot').setup()")
 
-	@pynvim.command("PiecesConversations")
+	@pynvim.command("PiecesChats")
 	@is_pieces_opened
 	def open_conversations(self):
 		self.nvim.exec_lua("require('pieces.copilot.conversations_ui').setup()")
@@ -205,7 +205,7 @@ class Pieces:
 	def auth_command(self):
 		self.nvim.exec_lua("require('pieces.auth').setup()")
 
-	@pynvim.command('PiecesCreateSnippet', range='', nargs='*')
+	@pynvim.command('PiecesCreateMaterial', range='', nargs='*')
 	@is_pieces_opened
 	def pieces_create_snippet(self, args, range):
 		self.nvim.exec_lua(f"require('pieces.assets.create').setup()")
