@@ -53,17 +53,6 @@ Install the plugins by running `:PackerSync` in Neovim.
 
 3. Run :UpdateRemotePlugins
 
- 
-
-## Configuration
-
-After installing the plugin, you can configure the host by adding the following lines to your `init.vim` or `init.lua`:
-
-```lua
-require("pieces.config").host = "http://localhost:1000"
-```
-
-By default the host will be http://localhost:1000 on Windows and MacOS and http://localhost:5323 on Linux
 
 ## Commands
 
@@ -118,12 +107,12 @@ In the Copilot chat input, you can use slash commands to perform specific action
 
 Change the current LLM model.
 
-### `:PiecesConversations`
+### `:PiecesChats`
 
 Open a list of Pieces Copilot conversations to choose from.
 
 ```vim
-:PiecesConversations
+:PiecesChats
 ```
 Navigation and actions:
 - Press `<Del>` on the selected conversation to delete it
@@ -132,35 +121,35 @@ Navigation and actions:
 
 ## Asset Management Commands
 
-### `:PiecesSnippets`
+### `:PiecesDrive`
 
-List all of the saved snippets.
+List all of the saved materials.
 
 ```vim
-:PiecesSnippets
+:PiecesDrive
 ```
 Navigation and actions:
-- Use `<Up>` and `<Down>` arrow keys to navigate the snippet list.
-- Press `<Enter>` to open the selected snippet for editing.
-- Press `<Del>` on the selected snippet to delete it.
-- When editing a snippet:
+- Use `<Up>` and `<Down>` arrow keys to navigate the material list.
+- Press `<Enter>` to open the selected material for editing.
+- Press `<Del>` on the selected material to delete it.
+- When editing a material:
   1. Press `i` to enter insert mode and make changes.
   2. Press `<Esc>` to exit insert mode.
-  3. Type `:w` and press `<Enter>` to save the edited snippet.
-  4. Type `:q` and press `<Enter>` to exit the snippet editor.
+  3. Type `:w` and press `<Enter>` to save the edited material.
+  4. Type `:q` and press `<Enter>` to exit the material editor.
 
 
-### `:PiecesCreateSnippet`
+### `:PiecesCreateMaterial`
 
-Create a snippet from the selected text in the visual mode.
+Create a material from the selected text in the visual mode.
 
 ```vim
-:PiecesCreateSnippet
+:PiecesCreateMaterial
 ```
 
 1. Enter visual mode by pressing `v` in normal mode.
 2. Select the desired text using arrow keys or Vim motions.
-3. Type `:PiecesCreateSnippet` and press `<Enter>`.
+3. Type `:PiecesCreateMaterial` and press `<Enter>`.
 
 ## Auth Commands
 
