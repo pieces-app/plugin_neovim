@@ -10,7 +10,7 @@ for line in string.gmatch([=[
 /_/   /_/\___/\___/\___/____/  /_/  \____/_/     /_/ |_/\___/\____/|___/_/_/ /_/ /_/ 
 
 ```
-We're thrilled to have you join us. This step-by-step guide will help you get started with the Pieces Neovim plugin, ensuring you can integrate it into your development workflow with ease.
+We're thrilled to have you join us. This step-by-step guide will help you get started with the Pieces for Neovim plugin, ensuring you can integrate it into your development workflow with ease.
 
 ]=], "([^\n]*)\n?") do
     table.insert(welcoming, line)
@@ -19,41 +19,41 @@ end
 
 local steps = {
 [=[
-**Step 1: Save a Snippet**
+**Step 1: Save a Material**
 
-- Let's get started by saving a snippet to Pieces.
-- Select the following snippet, then run `:PiecesCreateSnippet`
+- Let's get started by saving a material to Pieces.
+- Select the following material, then run `:PiecesCreateMaterial`
 
 ```cmd
 pip3 install pieces-cli
 ```
 ]=],
 [=[
-**Step 2: Manage your saved Snippets**
+**Step 2: Manage your saved Materials**
 
-- Now, let's view all of your saved snippets by typing **`:PiecesSnippets`**.
+- Now, let's view all of your saved materials by typing **`:PiecesDrive`**.
 
-  - Use <Up> and <Down> arrow keys to navigate the snippet list.
-  - Press <Enter> to open the selected snippet for editing.
-  - Press <Del> on the selected snippet to delete it.
-  - When editing a snippet:
+  - Use <Up> and <Down> arrow keys to navigate the material list.
+  - Press <Enter> to open the selected material for editing.
+  - Press <Del> on the selected material to delete it.
+  - When editing a material:
       i.  Press i to enter insert mode and make changes.
       ii.  Press <Esc> to exit insert mode.
-      iii. Type :w and press <Enter> to save the edited snippet.
-      iv.  Type :q and press <Enter> to exit the snippet editor.
+      iii. Type :w and press <Enter> to save the edited material.
+      iv.  Type :q and press <Enter> to exit the material editor.
 ]=],
 [=[
 **Step 3: Activate Copilot**
 
 - Run **`:PiecesCopilot`** to Activate the Pieces Copilot to assist you with code.
   - Use /change_model in the Copilot input to change the model
-  - Use /context to change the conversation context
+  - Use /context to change the chat context
 
 ]=],
 [=[
-**Step 4: Manage Conversations**
+**Step 4: Manage Chats**
 
-- Access your previous conversations and interactions with the Pieces Copilot using **`:PiecesConversations`**.
+- Access your previous chat and interactions with the Pieces Copilot using **`:PiecesChats`**.
 ]=],
 [=[
 **Step 5: Check your account status**
@@ -73,8 +73,8 @@ pip3 install pieces-cli
 }
 
 local commands = {
-  "'<,'>PiecesCreateSnippet",
-  "PiecesSnippets",
+  "'<,'>PiecesCreateMaterial",
+  "PiecesDrive",
   "PiecesCopilot",
   "PiecesConversations",
   "PiecesAccount",
@@ -106,7 +106,7 @@ function M.start_onboarding()
   else
     bufnr = vim.api.nvim_create_buf(false, true)
   end
-  lines = welcoming
+  lines = welcoming 
   previous_sign_line = nil
   vim.fn.sign_define('CompletedStep', { text = '✔', texthl = 'PiecesSuccessMsg' })
   vim.fn.sign_define('PendingStep', { text = '↻', texthl = 'PiecesGreen' })
