@@ -3,6 +3,7 @@ from pieces_os_client.wrapper import PiecesClient
 from pieces_os_client.models.seeded_connector_connection import SeededConnectorConnection
 from pieces_os_client.models.seeded_tracked_application import SeededTrackedApplication
 from pieces_os_client.wrapper.version_compatibility import VersionCheckResult
+from pydantic.config import get_config
 from ._version import __version__
 import pynvim
 import json
@@ -14,7 +15,6 @@ import os
 class Settings:
 	# Initialize class variables
 	nvim:pynvim.Nvim
-	host = ""
 	os:str
 	
 	api_client:PiecesClient
@@ -26,20 +26,22 @@ class Settings:
 			cls.api_client.model_name = value
 			cls.update_settings(model_name=value)
 
+	@classmethod
+	def get_config(cls, config):
+		lua_code = f"""
+		local config = require('pieces.config')
+		return config.{config}
+		"""
+		out = cls.nvim.exec_lua(lua_code)
+		return out
 
 	@classmethod
 	def load_config(cls) -> None:
 		"""
 			Load the lua configrations
 		"""
-		for config in ["os",'host']:
-			lua_code = f"""
-			local config = require('pieces.config')
-			return config.{config}
-			"""
-			out = cls.nvim.exec_lua(lua_code)
 
-			setattr(cls,config,out) # Setting up the host and the os
+		setattr(cls,"os",cls.get_config("os")) # Setting up the host and the os
 
 		cls.api_client = PiecesClient(
 			seeded_connector=SeededConnectorConnection(
@@ -54,7 +56,10 @@ class Settings:
 		cls.settings_file = os.path.join(cls.plugin_dir, "settings.json")
 		if not os.path.exists(cls.plugin_dir):
 			os.makedirs(cls.plugin_dir)
-
+	
+	@classmethod
+	def get_copilot_mode(cls):
+		return cls.get_config('copilot_mode')
 
 
 	@classmethod
