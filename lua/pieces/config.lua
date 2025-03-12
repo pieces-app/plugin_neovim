@@ -18,6 +18,6 @@ local config = {}
 
 config.os = get_os()
 
+config.copilot_mode = "IDE"
 
-
-return config 
+return config

@@ -6,6 +6,7 @@ from pieces_os_client.wrapper.basic_identifier import BasicAsset,BasicChat,Basic
 from pieces_os_client.wrapper.client import PiecesClient
 from pieces_os_client.wrapper.websockets import BaseWebsocket
 from pieces_os_client.models.fragment_metadata import FragmentMetadata
+from pieces_os_client.models.inactive_os_server_applet import InactiveOSServerApplet, OSAppletEnum
 from .startup import Startup
 from .utils import is_pieces_opened, install_pieces_os
 from .auth import Auth
@@ -192,7 +193,16 @@ class Pieces:
 	@pynvim.command("PiecesCopilot")
 	@is_pieces_opened
 	def open_copilot(self):
-		self.nvim.exec_lua("require('pieces.copilot').setup()")
+		if Settings.get_copilot_mode() == "BROWSER":
+			return webbrowser.open(
+				"localhost:" + str(Settings.api_client.os_api.os_applet_launch(
+					InactiveOSServerApplet(
+						type=OSAppletEnum.COPILOT
+					)
+				).port)
+			)
+		else:
+			self.nvim.exec_lua("require('pieces.copilot').setup()")
 
 	@pynvim.command("PiecesChats")
 	@is_pieces_opened
