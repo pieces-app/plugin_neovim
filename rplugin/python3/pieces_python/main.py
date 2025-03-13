@@ -116,8 +116,8 @@ class Pieces:
                 Settings.api_client.copilot.context.paths.append(path)
                 type = "folders" if os.path.isdir(path) else "files"
                 Settings.nvim.exec_lua(
-                    f"table.insert(require('pieces.copilot.context').context['{
-                        type}'], '{path}')"
+                    "table.insert(require('pieces.copilot.context')"
+                    f".context['{type}'], '{path}')"
                 )
             else:
                 Settings.nvim.err_write("Invalid paths\n")
@@ -125,8 +125,8 @@ class Pieces:
             Settings.api_client.copilot.context.assets.append(
                 BasicAsset(snippet))
             Settings.nvim.exec_lua(
-                f"table.insert(require('pieces.copilot.context').context['snippets'], '{
-                    snippet}')"
+                "table.insert(require('pieces.copilot.context')"
+                f".context['snippets'], '{snippet}')"
             )
 
     @pynvim.function("PiecesOpenPiecesOS", sync=True)

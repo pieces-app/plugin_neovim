@@ -108,8 +108,11 @@ def install_pieces_os():
     """
 
     if Settings.api_client.local_os == "WINDOWS":
-        Settings.open_website(f"https://builds.pieces.app/stages/production/appinstaller/os_server.appinstaller?product={
-            Settings.api_client.tracked_application.name.value}&download=true")
+        Settings.open_website(
+            f"https://builds.pieces.app/stages/production/appinstaller/"
+            "os_server.appinstaller?"
+            f"product={Settings.api_client.tracked_application.name.value}"
+            "&download=true")
 
     elif Settings.api_client.local_os == "LINUX":
         Settings.open_website("https://snapcraft.io/pieces-os")
@@ -119,8 +122,9 @@ def install_pieces_os():
         arch = os.uname().machine
         pkg_url = (
             "https://builds.pieces.app/stages/production/macos_packaging/pkg-pos-launch-only"
-            f"{'-arm64' if arch == 'arm64' else ''}/download?product={
-                Settings.api_client.tracked_application.name.value}&download=true"
+            f"{'-arm64' if arch == 'arm64' else ''}/download?"
+            f"product={Settings.api_client.tracked_application.name.value}"
+            "&download=true"
         )
         Settings.open_website(pkg_url)
 
