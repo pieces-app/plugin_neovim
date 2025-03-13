@@ -3,122 +3,126 @@ from pieces_os_client.wrapper.websockets import HealthWS
 from pieces_os_client.wrapper.version_compatibility import UpdateEnum, VersionChecker
 from .settings import Settings
 import os
-import webbrowser
 
 PIECES_OS_MIN_VERSION = "11.0.0"  # Minium version (11.0.0)
-PIECES_OS_MAX_VERSION = "12.0.0" # Maxium version (12.0.0)
+PIECES_OS_MAX_VERSION = "12.0.0"  # Maxium version (12.0.0)
+
 
 def convert_to_lua_table(python_dict):
-	"""
-	Convert a Python dictionary to a Lua table representation.
-	Does not support objects and does not support lists except list of strings.
-	"""
-	def convert_value(value):
-		if isinstance(value, dict):
-			return convert_to_lua_table(value)
-		elif isinstance(value, str):
-			return f'[=[{value}]=]'
-		elif isinstance(value, bool):
-			return "true" if value else "false"
-		elif isinstance(value, list):
-			return "{" + ", ".join(f'"{val}"' for val in value) + "}"
-		elif isinstance(value, (int, float)):
-			return str(value)
-		else:
-			raise TypeError(f"Unsupported data type: {type(value)}")
+    """
+    Convert a Python dictionary to a Lua table representation.
+    Does not support objects and does not support lists except list of strings.
+    """
+    def convert_value(value):
+        if isinstance(value, dict):
+            return convert_to_lua_table(value)
+        elif isinstance(value, str):
+            return f'[=[{value}]=]'
+        elif isinstance(value, bool):
+            return "true" if value else "false"
+        elif isinstance(value, list):
+            return "{" + ", ".join(f'"{val}"' for val in value) + "}"
+        elif isinstance(value, (int, float)):
+            return str(value)
+        else:
+            raise TypeError(f"Unsupported data type: {type(value)}")
 
-	out = "{"
-	for key, value in python_dict.items():
-		lua_key = f'["{key}"]' if isinstance(key, str) else key
-		lua_value = convert_value(value)
-		out += f"{lua_key} = {lua_value}, "
-	return out.rstrip(', ') + "}"
+    out = "{"
+    for key, value in python_dict.items():
+        lua_key = f'["{key}"]' if isinstance(key, str) else key
+        lua_value = convert_value(value)
+        out += f"{lua_key} = {lua_value}, "
+    return out.rstrip(', ') + "}"
 
 
 def on_copilot_message(message):
-	if message.question:
-		answers = message.question.answers.iterable
+    if message.question:
+        answers = message.question.answers.iterable
 
-		for answer in answers:
-			if not answer.text:
-				continue
-			text = answer.text
-			if text == "\n":
-				Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
-					require("pieces.copilot").add_line()""")
-				continue
-			Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
-				require("pieces.copilot").append_to_chat([=[{text}]=],"ASSISTANT")
-			""")
-	
-	if message.status == "COMPLETED":
-		Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
-			require("pieces.copilot").completed(true)
-		""")
-		Settings.api_client.copilot.chat = BasicChat(message.conversation)
-	elif message.status == "FAILED":
-		Settings.nvim.async_call(Settings.nvim.exec_lua,f"""
-			require("pieces.copilot").completed(true)
-		""")
-		return # TODO: Add a better error message
+        for answer in answers:
+            if not answer.text:
+                continue
+            text = answer.text
+            if text == "\n":
+                Settings.nvim.async_call(Settings.nvim.exec_lua, f"""
+                        require("pieces.copilot").add_line()""")
+                continue
+            Settings.nvim.async_call(Settings.nvim.exec_lua, f"""
+                    require("pieces.copilot").append_to_chat([=[{text}]=],"ASSISTANT")
+            """)
 
-def check_compatibility(notify_if_pos_off = False):
-	if not Settings.version_compatibility:
-		if not Settings.api_client.is_pieces_running():
-			if notify_if_pos_off: Settings.nvim.exec_lua("require('pieces.utils').notify_pieces_os()")
-			return False
+    if message.status == "COMPLETED":
+        Settings.nvim.async_call(Settings.nvim.exec_lua, f"""
+                require("pieces.copilot").completed(true)
+        """)
+        Settings.api_client.copilot.chat = BasicChat(message.conversation)
+    elif message.status == "FAILED":
+        Settings.nvim.async_call(Settings.nvim.exec_lua, f"""
+                require("pieces.copilot").completed(true)
+        """)
+        return  # TODO: Add a better error message
 
-		Settings.version_compatibility = VersionChecker(
-			PIECES_OS_MIN_VERSION,
-			PIECES_OS_MAX_VERSION,
-			Settings.api_client.version).version_check()
 
-	if not Settings.version_compatibility.compatible:
-		plugin = "Pieces OS" if Settings.version_compatibility.update == UpdateEnum.PiecesOS else "the Neovim Pieces plugin"
-		Settings.nvim.async_call(Settings.nvim.err_write, f"Please update {plugin}\n")
-		return False
-	else: 
-		return True
+def check_compatibility(notify_if_pos_off=False):
+    if not Settings.version_compatibility:
+        if not Settings.api_client.is_pieces_running():
+            if notify_if_pos_off:
+                Settings.nvim.exec_lua(
+                    "require('pieces.utils').notify_pieces_os()")
+            return False
+
+        Settings.version_compatibility = VersionChecker(
+            PIECES_OS_MIN_VERSION,
+            PIECES_OS_MAX_VERSION,
+            Settings.api_client.version).version_check()
+
+    if not Settings.version_compatibility.compatible:
+        plugin = "Pieces OS" if Settings.version_compatibility.update == UpdateEnum.PiecesOS else "the Neovim Pieces plugin"
+        Settings.nvim.async_call(
+            Settings.nvim.err_write, f"Please update {plugin}\n")
+        return False
+    else:
+        return True
+
 
 def is_pieces_opened(func):
-	def wrapper(*args, **kwargs):
-		if not check_compatibility(True):
-			return
+    def wrapper(*args, **kwargs):
+        if not check_compatibility(True):
+            return
 
-		if Settings.api_client.is_pos_stream_running:
-			return func(*args, **kwargs)
-		else:
-			# Run the health request to check if the server is running
-			if Settings.api_client.is_pieces_running():
-				HealthWS.get_instance().start()
-				return func(*args,**kwargs)
-			else:
-				return Settings.nvim.exec_lua("require('pieces.utils').notify_pieces_os()")
-	return wrapper
-
+        if Settings.api_client.is_pos_stream_running:
+            return func(*args, **kwargs)
+        else:
+            # Run the health request to check if the server is running
+            if Settings.api_client.is_pieces_running():
+                HealthWS.get_instance().start()
+                return func(*args, **kwargs)
+            else:
+                return Settings.nvim.exec_lua("require('pieces.utils').notify_pieces_os()")
+    return wrapper
 
 
 def install_pieces_os():
     """
     Install Pieces OS based on the platform
     """
-    
+
     if Settings.api_client.local_os == "WINDOWS":
-        webbrowser.open(f"https://builds.pieces.app/stages/production/appinstaller/os_server.appinstaller?product={Settings.api_client.tracked_application.name.value}&download=true")
+        Settings.open_website(f"https://builds.pieces.app/stages/production/appinstaller/os_server.appinstaller?product={
+            Settings.api_client.tracked_application.name.value}&download=true")
 
     elif Settings.api_client.local_os == "LINUX":
-        webbrowser.open("https://snapcraft.io/pieces-os")
+        Settings.open_website("https://snapcraft.io/pieces-os")
         return
-    
+
     elif Settings.api_client.local_os == "MACOS":
         arch = os.uname().machine
         pkg_url = (
             "https://builds.pieces.app/stages/production/macos_packaging/pkg-pos-launch-only"
-            f"{'-arm64' if arch == 'arm64' else ''}/download?product={Settings.api_client.tracked_application.name.value}&download=true"
+            f"{'-arm64' if arch == 'arm64' else ''}/download?product={
+                Settings.api_client.tracked_application.name.value}&download=true"
         )
-        webbrowser.open(pkg_url)
-    
+        Settings.open_website(pkg_url)
+
     else:
         raise ValueError("Invalid platform")
-
-
