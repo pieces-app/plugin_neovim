@@ -2,7 +2,7 @@
 
 # Important
 
-Please make sure you have [**Pieces OS**](https://docs.pieces.app/installation-getting-started/what-am-i-installing) installed to run the Package.
+Please make sure you have [**Pieces OS**](https://docs.pieces.app/products/meet-pieces) installed to run the Package.
 
 ## Getting Started with the Pieces Neovim Plugin
 
