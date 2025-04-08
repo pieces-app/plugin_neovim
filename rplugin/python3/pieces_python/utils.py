@@ -4,8 +4,8 @@ from pieces_os_client.wrapper.version_compatibility import UpdateEnum, VersionCh
 from .settings import Settings
 import os
 
-PIECES_OS_MIN_VERSION = "11.0.0"  # Minium version (11.0.0)
-PIECES_OS_MAX_VERSION = "12.0.0"  # Maxium version (12.0.0)
+PIECES_OS_MIN_VERSION = "12.0.0"  # Minium version (12.0.0)
+PIECES_OS_MAX_VERSION = "13.0.0"  # Maxium version (13.0.0)
 
 
 def convert_to_lua_table(python_dict):
