@@ -4,8 +4,8 @@ from pieces_os_client.wrapper.version_compatibility import UpdateEnum, VersionCh
 from .settings import Settings
 import os
 
-PIECES_OS_MIN_VERSION = "11.0.0"  # Minium version (11.0.0)
-PIECES_OS_MAX_VERSION = "12.0.0"  # Maxium version (12.0.0)
+PIECES_OS_MIN_VERSION = "12.0.0"  # Minium version (12.0.0)
+PIECES_OS_MAX_VERSION = "13.0.0"  # Maxium version (13.0.0)
 
 
 def convert_to_lua_table(python_dict):
@@ -84,22 +84,38 @@ def check_compatibility(notify_if_pos_off=False):
     else:
         return True
 
+def check_login() -> bool:
+    from .auth import Auth
 
-def is_pieces_opened(func):
-    def wrapper(*args, **kwargs):
-        if not check_compatibility(True):
-            return
+    if not Auth.user_profile:
+        Settings.nvim.exec_lua("require('pieces.utils').notify_login()")
+        return False
+    return True
 
-        if Settings.api_client.is_pos_stream_running:
-            return func(*args, **kwargs)
-        else:
-            # Run the health request to check if the server is running
-            if Settings.api_client.is_pieces_running():
-                HealthWS.get_instance().start()
+def is_pieces_opened(bypass_login=False):
+    """
+    Decorator that checks if POS is running and shows a notification if it's not.
+    It also checks if the user is logged in or allows bypass via parameter.
+    """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if not check_compatibility(True):
+                return
+
+            login_state = check_login() or bypass_login
+            if Settings.api_client.is_pos_stream_running and login_state:
                 return func(*args, **kwargs)
             else:
-                return Settings.nvim.exec_lua("require('pieces.utils').notify_pieces_os()")
-    return wrapper
+                # Run the health request to check if the server is running
+                if Settings.api_client.is_pieces_running():
+                    if not login_state:
+                        return
+                    HealthWS.get_instance().start()
+                    return func(*args, **kwargs)
+                else:
+                    return Settings.nvim.exec_lua("require('pieces.utils').notify_pieces_os()")
+        return wrapper
+    return decorator
 
 
 def install_pieces_os():
