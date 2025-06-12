@@ -220,7 +220,7 @@ class Pieces:
             "require('pieces.copilot.conversations_ui').setup()")
 
     @pynvim.command("PiecesAccount")
-    @is_pieces_opened()
+    @is_pieces_opened(True)
     def auth_command(self):
         self.nvim.exec_lua("require('pieces.auth').setup()")
 
