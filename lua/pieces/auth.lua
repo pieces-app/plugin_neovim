@@ -79,7 +79,7 @@ local function create_ui(content, default_hl)
 end
 
 local function login_page()
-  local choice = vim.fn.confirm("Note this command only works if you are logged in, Do you want to login?", "&Yes\n&No", 1)
+  local choice = vim.fn.confirm("Note this command only works if you are logged in, Do you want to sign in?", "&Yes\n&No", 1)
   if choice == 1 then
     vim.fn.PiecesLogin(true)
   end

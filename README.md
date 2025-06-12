@@ -164,7 +164,7 @@ You can also logout from your account by going to the `Logout` option in the Aut
 
 ### `:PiecesLogin`
 
-Login to your Pieces account.
+Sign into your Pieces account.
 
 ```vim
 :PiecesLogin
