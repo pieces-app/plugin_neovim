@@ -19,7 +19,7 @@ end
 
 local steps = {
 [=[
-**Step 1: Save a Material**
+**Step 2: Save a Material**
 
 - Let's get started by saving a material to Pieces.
 - Select the following material, then run `:PiecesCreateMaterial`
@@ -29,7 +29,7 @@ pip3 install pieces-cli
 ```
 ]=],
 [=[
-**Step 2: Manage your saved Materials**
+**Step 3: Manage your saved Materials**
 
 - Now, let's view all of your saved materials by typing **`:PiecesDrive`**.
 
@@ -43,7 +43,7 @@ pip3 install pieces-cli
       iv.  Type :q and press <Enter> to exit the material editor.
 ]=],
 [=[
-**Step 3: Activate Copilot**
+**Step 4: Activate Copilot**
 
 - Run **`:PiecesCopilot`** to Activate the Pieces Copilot to assist you with code.
   - Use /change_model in the Copilot input to change the model
@@ -51,28 +51,29 @@ pip3 install pieces-cli
 
 ]=],
 [=[
-**Step 4: Manage Chats**
+**Step 5: Manage Chats**
 
 - Access your previous chat and interactions with the Pieces Copilot using **`:PiecesChats`**.
 ]=],
 [=[
-**Step 5: Check your account status**
+**Step 6: Check your account status**
 
 - Run **`:PiecesAccount`** to Manage your Pieces account settings directly from Neovim.
 ]=],
 [=[
-**Step 6: Sharing your Feedback**
+**Step 7: Sharing your Feedback**
 
 - Your feedback is very **important** to us. Please share some of your feedback by typing `:PiecesFeedback`.
 ]=],
 [=[
-**Step 7: Contributing**
+**Step 8: Contributing**
 
 - The Pieces for Neovim plugin is an **open source project** and you can contribute to it by creating a pull request or open an issue by typing **`:PiecesContribute`**.
 ]=]
 }
 
 local commands = {
+  "PiecesLogin",
   "'<,'>PiecesCreateMaterial",
   "PiecesDrive",
   "PiecesCopilot",
