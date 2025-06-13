@@ -155,13 +155,13 @@ class Pieces:
         return self.nvim.async_call(self.nvim.err_write, "Could not start Pieces OS\n")
 
     @pynvim.command("PiecesClosePiecesOS")
-    @is_pieces_opened
+    @is_pieces_opened()
     def close_pieces_os(self):
         Settings.api_client.os_api.os_terminate()
         return self.nvim.out_write("Closed PiecesOS\n")
 
     @pynvim.command('PiecesOSVersion')
-    @is_pieces_opened
+    @is_pieces_opened(True)
     def get_version(self):
         self.nvim.out_write(f"{Settings.api_client.version}\n")
 
@@ -170,22 +170,22 @@ class Pieces:
         self.nvim.out_write(f"{__version__}\n")
 
     @pynvim.command('PiecesLogin')
-    @is_pieces_opened
+    @is_pieces_opened(True)
     def login(self):
         self.auth.login()
 
     @pynvim.command('PiecesLogout')
-    @is_pieces_opened
+    @is_pieces_opened(True)
     def logout(self):
         self.auth.logout()
 
     @pynvim.command('PiecesConnectCloud')
-    @is_pieces_opened
+    @is_pieces_opened()
     def connect(self):
         self.auth.connect()
 
     @pynvim.command('PiecesDisconnectCloud')
-    @is_pieces_opened
+    @is_pieces_opened(True)
     def disconnect(self):
         self.auth.disconnect()
 
@@ -195,12 +195,12 @@ class Pieces:
 
     # LUA COMMANDS
     @pynvim.command("PiecesDrive")
-    @is_pieces_opened
+    @is_pieces_opened()
     def open_snippets(self):
         self.nvim.exec_lua("require('pieces.assets').setup()")
 
     @pynvim.command("PiecesCopilot")
-    @is_pieces_opened
+    @is_pieces_opened()
     def open_copilot(self):
         if Settings.get_copilot_mode() == "BROWSER":
             return Settings.open_website(
@@ -214,17 +214,17 @@ class Pieces:
             self.nvim.exec_lua("require('pieces.copilot').setup()")
 
     @pynvim.command("PiecesChats")
-    @is_pieces_opened
+    @is_pieces_opened()
     def open_conversations(self):
         self.nvim.exec_lua(
             "require('pieces.copilot.conversations_ui').setup()")
 
     @pynvim.command("PiecesAccount")
-    @is_pieces_opened
+    @is_pieces_opened(True)
     def auth_command(self):
         self.nvim.exec_lua("require('pieces.auth').setup()")
 
     @pynvim.command('PiecesCreateMaterial', range='', nargs='*')
-    @is_pieces_opened
+    @is_pieces_opened()
     def pieces_create_snippet(self, args, range):
-        self.nvim.exec_lua(f"require('pieces.assets.create').setup()")
+        self.nvim.exec_lua("require('pieces.assets.create').setup()")

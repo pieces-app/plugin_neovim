@@ -105,12 +105,12 @@ class Settings:
 
     @classmethod
     def open_website(cls, url: str):
-        from .auth.auth_user import AuthUser
+        from .auth import Auth
         if (not cls.api_client.is_pos_stream_running) and ("pieces.app" not in url):
             return webbrowser.open(url)
         para = {}
-        if AuthUser.user_profile:
-            para["user"] = AuthUser.user_profile.id
+        if Auth.user_profile:
+            para["user"] = Auth.user_profile.id
         _id = cls.get_os_id()
         if _id:
             para["os"] = _id
@@ -121,5 +121,4 @@ class Settings:
 
         url_parts[4] = urlencode(query)
         new_url = urlunparse(url_parts)
-        print(new_url)
         webbrowser.open(new_url)

@@ -17,7 +17,15 @@ local function notify_pieces_os()
       vim.cmd("PiecesOpenPiecesOS")
     end
 end
+
+local function notify_login()
+  local choice = vim.fn.confirm("You must login to use this feature, Do you want to open the login page?", "&Yes\n&No", 1)
+    if choice == 1 then
+      vim.cmd("PiecesLogin")
+    end
+end
 return {
   make_buffer_read_only=make_buffer_read_only,
+  notify_login=notify_login,
   notify_pieces_os=notify_pieces_os
 }
