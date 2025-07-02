@@ -1,6 +1,7 @@
 local context = require("pieces.copilot.context.ui")
 local M = {}
 local commands
+local has_cmp, cmp = pcall(require, 'cmp')
 
 -- Function to return the commands with the args
 local function _commands()
@@ -74,7 +75,10 @@ local function buffer_has_words()
 end
 
 local function setup_source()
-    local cmp = require('cmp')
+    if not has_cmp then
+        return
+    end
+    
     local source = {}
     source.new = function()
         return setmetatable({}, { __index = source })
@@ -109,11 +113,15 @@ M.setup_buffer = function(bufnr)
     if commands == nil then
       commands = _commands()
     end
-    require 'cmp'.setup.buffer({
-        sources = {
-            { name = 'pieces_slash_commands_input' }
-        },
-    }, bufnr)
+    
+    if has_cmp then
+        cmp.setup.buffer({
+            sources = {
+                { name = 'pieces_slash_commands_input' }
+            },
+        }, bufnr)
+    end
+    
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 end
 

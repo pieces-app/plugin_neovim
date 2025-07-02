@@ -1,7 +1,7 @@
 local M = {}
 local Popup = require("nui.popup")
 local Layout = require('nui.layout')
-local cmp = require('cmp')
+local has_cmp, cmp = pcall(require, 'cmp')
 local icons = require('nvim-web-devicons')
 local ListUpdater = require("pieces.list_updater")
 local relevance = require("pieces.copilot.relevance_table")
@@ -33,12 +33,20 @@ local function get_paths(path)
             if not name then break end
             local full_path = dir .. name
             if type == "directory" then
-                table.insert(items, { label = full_path .. "/", kind = cmp.lsp.CompletionItemKind.Folder })
+                local item = { label = full_path .. "/" }
+                if has_cmp then
+                    item.kind = cmp.lsp.CompletionItemKind.Folder
+                end
+                table.insert(items, item)
             else
                 local extension = full_path:match("^.+%.(.+)$")
                 for _,v in ipairs(relevance) do
                     if extension == v then
-                        table.insert(items, { label = full_path, kind = cmp.lsp.CompletionItemKind.File })
+                        local item = { label = full_path }
+                        if has_cmp then
+                            item.kind = cmp.lsp.CompletionItemKind.File
+                        end
+                        table.insert(items, item)
                         goto continue
                     end
                 end
@@ -53,6 +61,10 @@ end
 
 
 local function setup_source()
+    if not has_cmp then
+        return
+    end
+    
     local source = {}
     source.new = function()
         return setmetatable({}, { __index = source })
@@ -77,11 +89,13 @@ end
 setup_source()
 
 M.setup_buffer = function(bufnr)
-    cmp.setup.buffer({
-        sources = {
-            { name = 'pieces_file_path' }
-        },
-    }, bufnr)
+    if has_cmp then
+        cmp.setup.buffer({
+            sources = {
+                { name = 'pieces_file_path' }
+            },
+        }, bufnr)
+    end
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 end
 
