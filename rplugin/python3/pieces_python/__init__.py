@@ -5,7 +5,7 @@ import pip
 def update_sdks():
 	pip.main(["install","pieces_os_client","--upgrade"])
 
-MIN_SDKS_VERSION = "4.3.0"
+MIN_SDKS_VERSION = "4.4.0"
 try:
 	from pieces_os_client import __version__ as pieces_os_client_version
 
