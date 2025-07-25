@@ -73,7 +73,15 @@ end
 
 local function update_status_bar()
 	if split ~= nil and type(split.winid) == "number" and vim.api.nvim_win_is_valid(split.winid) == true then
-		vim.api.nvim_win_set_option(split.winid, 'statusline', 'Pieces Model: '.. vim.fn.PiecesGetModel())
+		local success, model_name = pcall(vim.fn.PiecesGetModel)
+		if success and model_name then
+			local status_success, _ = pcall(vim.api.nvim_win_set_option, split.winid, 'statusline', 'Pieces Model: ' .. model_name)
+			if not status_success then
+				print("Failed to set statusline option")
+			end
+		end
+	else
+		print("Failed to get model name")
 	end
 end
 
